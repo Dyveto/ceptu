@@ -31,8 +31,9 @@ public class Customer {
 
     private String phone;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private CustomerStatus status;
 
     @Column(name = "created_at")
     private Instant createdAt;

@@ -3,6 +3,7 @@ package edu.unimagdalena.web.ceptu.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -27,11 +28,12 @@ public class Order {
     @JoinColumn(name = "address_id", nullable = false)
     private Address addressId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private OrderStatus status;
 
     @Column(nullable = false)
-    private float total;
+    private BigDecimal total;
 
     @Column(name = "created_at")
     private Instant createdAt;

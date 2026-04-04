@@ -3,6 +3,7 @@ package edu.unimagdalena.web.ceptu.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -29,7 +30,7 @@ public class Product {
     private String sku;
 
     @Column(nullable = false)
-    private float price;
+    private BigDecimal price;
 
     @Column(nullable = false)
     private boolean active;

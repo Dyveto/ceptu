@@ -3,6 +3,7 @@ package edu.unimagdalena.web.ceptu.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -29,8 +30,8 @@ public class OrderItem {
     private int quantity;
 
     @Column(name = "unit_price", nullable = false)
-    private float unitPrice;
+    private BigDecimal unitPrice;
 
     @Column(nullable = false)
-    private float subtotal;
+    private BigDecimal subtotal;
 }

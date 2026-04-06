@@ -1,4 +1,4 @@
-package edu.unimagdalena.web.ceptu.services.impl;
+package edu.unimagdalena.web.ceptu.services;
 
 import edu.unimagdalena.web.ceptu.dto.response.OrderItemResponse;
 import edu.unimagdalena.web.ceptu.entities.OrderItem;
@@ -93,7 +93,7 @@ class OrderItemServiceImplTest {
 
         when(orderItemRepository.findByOrderId(orderId)).thenReturn(items);
         
-        // Configuramos el mapper para que devuelva respuestas distintas según el ítem (simulación básica)
+        // Configuramos el mapper para que devuelva respuestas distintas según el ítem
         when(orderItemMapper.toResponse(item1)).thenReturn(response1);
         when(orderItemMapper.toResponse(item2)).thenReturn(response2);
 

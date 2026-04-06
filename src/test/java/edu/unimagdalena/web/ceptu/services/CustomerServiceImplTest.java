@@ -1,4 +1,4 @@
-package edu.unimagdalena.web.ceptu.services.impl;
+package edu.unimagdalena.web.ceptu.services;
 
 import edu.unimagdalena.web.ceptu.dto.request.CreateCustomerRequest;
 import edu.unimagdalena.web.ceptu.dto.response.CustomerResponse;

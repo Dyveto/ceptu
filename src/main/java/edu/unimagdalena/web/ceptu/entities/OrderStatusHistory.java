@@ -20,7 +20,7 @@ public class OrderStatusHistory {
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
-    private Order orderId;
+    private Order order;
 
     @Column(name = "previous_status")
     private String previousStatus;

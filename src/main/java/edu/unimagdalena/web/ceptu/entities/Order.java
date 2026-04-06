@@ -22,11 +22,11 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customerId;
+    private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "address_id", nullable = false)
-    private Address addressId;
+    private Address address;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

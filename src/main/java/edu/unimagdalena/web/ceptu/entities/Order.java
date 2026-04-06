@@ -40,8 +40,8 @@ public class Order {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
-
-    @OneToMany(mappedBy = "order")
+    //                                                        limpia registros huérfanos
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderStatusHistory> orderStatusHistories;
 
     @OneToMany(mappedBy = "order")

@@ -26,10 +26,10 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             SELECT o FROM Order o
             WHERE (:customerId IS NULL OR o.customer.id = :customerId)
             AND (:status IS NULL OR o.status = :status)
-            AND (:startDate IS NULL OR o.createdAt >= :startDate)
-            AND (:endDate IS NULL OR o.createdAt <= :endDate)
-            AND (:minTotal IS NULL OR o.total >= :minTotal)
-            AND (:maxTotal IS NULL OR o.total <= :maxTotal)
+            AND (CAST(:startDate AS java.time.Instant) IS NULL OR o.createdAt >= :startDate)
+            AND (CAST(:endDate AS java.time.Instant) IS NULL OR o.createdAt <= :endDate)
+            AND (CAST(:minTotal AS java.math.BigDecimal) IS NULL OR o.total >= :minTotal)
+            AND (CAST(:maxTotal AS java.math.BigDecimal) IS NULL OR o.total <= :maxTotal)
             ORDER BY o.createdAt DESC
             """)
     Page<Order> findByFilters(

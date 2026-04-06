@@ -8,10 +8,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.UUID;
 
-public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusHistoryRepository, UUID> {
+public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusHistory, UUID> {
 
-    // Historial de cambios de un pedido
-    //List<OrderStatusHistory> findByOrderIdOrderByChangedAtAsc(UUID orderId);
     @Query("""
             SELECT h FROM OrderStatusHistory h
             WHERE h.order.id = :orderId

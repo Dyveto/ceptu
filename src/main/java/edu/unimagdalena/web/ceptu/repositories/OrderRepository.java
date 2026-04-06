@@ -1,4 +1,5 @@
 package edu.unimagdalena.web.ceptu.repositories;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import edu.unimagdalena.web.ceptu.dto.MonthlyIncomeDTO;
 import edu.unimagdalena.web.ceptu.dto.TopCustomerDTO;
@@ -14,8 +15,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public interface OrderRepository {
-
+public interface OrderRepository extends JpaRepository<Order, UUID> {
+        
     // Buscar pedidos por cliente
     List<Order> findByCustomerId(UUID customerId);
 

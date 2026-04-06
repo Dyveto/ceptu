@@ -13,7 +13,7 @@ public interface InventoryMapper {
     InventoryResponse toResponse(Inventory inventory);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "product", ignore = true) // El producto no cambia
+    @Mapping(target = "product", ignore = true)
     @Mapping(target = "updatedAt", expression = "java(Instant.now())")
     void updateEntityFromRequest(UpdateInventoryRequest request, @MappingTarget Inventory inventory);
 }

@@ -14,7 +14,7 @@ public interface OrderMapper {
     @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "customerFullName", expression = "java(order.getCustomer().getFirstName() + ' ' + order.getCustomer().getLastName())")
     @Mapping(target = "addressId", source = "address.id")
-    @Mapping(target = "items", source = "orderItems") // MapStruct automáticamente buscará el método de abajo
+    @Mapping(target = "items", source = "orderItems")
     OrderResponse toResponse(Order order);
 
     // Sub-mapeo para los Items de la orden

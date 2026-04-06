@@ -13,3 +13,4 @@ public interface ProductService {
     List<ProductResponse> getAllProducts();
     ProductResponse updateProduct(UUID id, UpdateProductRequest request);
     void deleteProduct(UUID id);
+}

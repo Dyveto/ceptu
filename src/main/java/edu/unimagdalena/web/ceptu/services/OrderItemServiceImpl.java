@@ -31,7 +31,6 @@ public class OrderItemServiceImpl implements OrderItemService {
     @Override
     @Transactional(readOnly = true)
     public List<OrderItemResponse> getItemsByOrderId(UUID orderId) {
-        // Utilizamos el método custom que definiste en tu OrderItemRepository
         List<OrderItem> items = orderItemRepository.findByOrderId(orderId);
         
         return items.stream()

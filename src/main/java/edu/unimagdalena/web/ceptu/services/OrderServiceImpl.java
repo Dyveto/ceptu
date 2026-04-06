@@ -32,25 +32,23 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
 
     @Override
-    @Transactional // ¡CRÍTICO! Si algo falla (ej. sin stock), TODO hace Rollback
+    @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
-        // 1. Validar Cliente y Dirección
         Customer customer = customerRepository.findById(request.customerId())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
         Address address = addressRepository.findById(request.addressId())
                 .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
 
-        // (Opcional pero recomendado) Validar que la dirección pertenece al cliente
+        // Validar que la dirección pertenece al cliente
         if (!address.getCustomer().getId().equals(customer.getId())) {
             throw new RuntimeException("La dirección no pertenece al cliente especificado");
         }
 
-        // 2. Inicializar la Orden
         Order order = Order.builder()
                 .customer(customer)
                 .address(address)
-                .status(OrderStatus.PENDING) // Asumo que tienes PENDING o CREATED
+                .status(OrderStatus.CREATED)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .total(BigDecimal.ZERO)
@@ -60,7 +58,7 @@ public class OrderServiceImpl implements OrderService {
 
         BigDecimal grandTotal = BigDecimal.ZERO;
 
-        // 3. Procesar Items y Validar/Descontar Inventario
+        // Procesar Items y Validar/Descontar Inventario
         for (CreateOrderItemRequest itemReq : request.items()) {
             Product product = productRepository.findById(itemReq.productId())
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + itemReq.productId()));
@@ -70,6 +68,10 @@ public class OrderServiceImpl implements OrderService {
             }
 
             Inventory inventory = product.getInventory();
+            if (inventory == null) {
+                throw new RuntimeException("El producto " + product.getName() + " no tiene un registro de inventario configurado.");
+            }
+
             if (inventory.getAvailableStock() < itemReq.quantity()) {
                 throw new RuntimeException("Stock insuficiente para: " + product.getName());
             }
@@ -97,7 +99,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setTotal(grandTotal);
 
-        // 4. Agregar Historial de Estado Inicial
+        // Agregar Historial de Estado Inicial
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
                 .previousStatus(null)
@@ -108,7 +110,7 @@ public class OrderServiceImpl implements OrderService {
         
         order.getOrderStatusHistories().add(history);
 
-        // 5. Guardar Orden (El Cascade guardará Items e Historial)
+        // Guardar Orden (El Cascade guardará Items e Historial)
         Order savedOrder = orderRepository.save(order);
 
         return orderMapper.toResponse(savedOrder);
@@ -133,10 +135,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByCustomerId(UUID customerId) {
-        // Asumiendo que crearás este método en el OrderRepository
-        // List<Order> orders = orderRepository.findByCustomerId(customerId);
-        // Retorno omitido por brevedad, es el mismo stream map de arriba.
-        return new ArrayList<>(); 
+        List<Order> orders = orderRepository.findByCustomerId(customerId);
+        return orders.stream()
+                .map(orderMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -146,10 +148,10 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException("Orden no encontrada con ID: " + id));
 
         // Validar que se pueda cancelar
-        if (order.getStatus() == OrderStatus.CANCELLED) { // Asumo que tienes CANCELLED en tu Enum
+        if (order.getStatus() == OrderStatus.CANCELLED) {
             throw new RuntimeException("La orden ya se encuentra cancelada");
         }
-        if (order.getStatus() == OrderStatus.DELIVERED) { // Asumo que tienes DELIVERED
+        if (order.getStatus() == OrderStatus.DELIVERED) {
             throw new RuntimeException("No se puede cancelar una orden ya entregada");
         }
 
@@ -157,7 +159,7 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.CANCELLED);
         order.setUpdatedAt(Instant.now());
 
-        // 1. Restaurar el Inventario
+        // Restaurar el Inventario
         for (OrderItem item : order.getOrderItems()) {
             Inventory inventory = item.getProduct().getInventory();
             inventory.setAvailableStock(inventory.getAvailableStock() + item.getQuantity());
@@ -165,7 +167,7 @@ public class OrderServiceImpl implements OrderService {
             inventoryRepository.save(inventory);
         }
 
-        // 2. Registrar el historial
+        // Registrar el historial
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
                 .previousStatus(previousStatus)

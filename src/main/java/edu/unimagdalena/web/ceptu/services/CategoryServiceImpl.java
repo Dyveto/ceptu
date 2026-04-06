@@ -63,8 +63,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
         
-        // Validación Arquitectónica: No permitir borrar si tiene productos
-        // Esto evita errores 500 feos por DataIntegrityViolationException en la BD
+        // No permitir borrar si tiene productos
         if (category.getProducts() != null && !category.getProducts().isEmpty()) {
             throw new RuntimeException("No se puede eliminar la categoría porque tiene productos asociados.");
         }

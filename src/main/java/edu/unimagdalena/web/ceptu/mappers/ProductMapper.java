@@ -10,9 +10,9 @@ import org.mapstruct.Mapping;
 public interface ProductMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "category", ignore = true) // Lo buscaremos en la BD
-    @Mapping(target = "inventory", ignore = true) // Lo construiremos manualmente
-    @Mapping(target = "active", constant = "true") // Por defecto activo al crear
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "inventory", ignore = true)
+    @Mapping(target = "active", constant = "true")
     @Mapping(target = "createdAt", expression = "java(Instant.now())")
     Product toEntity(CreateProductRequest request);
 

@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusHistory, UUID> {
 
+    // Historial de cambios de un pedido
     @Query("""
             SELECT h FROM OrderStatusHistory h
             WHERE h.order.id = :orderId

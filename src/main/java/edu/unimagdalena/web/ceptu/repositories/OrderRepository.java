@@ -7,6 +7,7 @@ import edu.unimagdalena.web.ceptu.entities.Order;
 import edu.unimagdalena.web.ceptu.entities.enums.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
-        
+
     // Buscar pedidos por cliente
     List<Order> findByCustomerId(UUID customerId);
 

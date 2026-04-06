@@ -1,7 +1,7 @@
 package edu.unimagdalena.web.ceptu.repositories;
 
-import edu.unimagdalena.web.ceptu.services.dto.MonthlyIncomeDTO;
-import edu.unimagdalena.web.ceptu.services.dto.TopCustomerDTO;
+import edu.unimagdalena.web.ceptu.dto.MonthlyIncomeDTO;
+import edu.unimagdalena.web.ceptu.dto.TopCustomerDTO;
 import edu.unimagdalena.web.ceptu.entities.Order;
 import edu.unimagdalena.web.ceptu.entities.OrderStatus;
 import org.springframework.data.domain.Page;

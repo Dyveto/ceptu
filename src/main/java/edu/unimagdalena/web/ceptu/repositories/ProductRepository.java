@@ -1,7 +1,7 @@
 package edu.unimagdalena.web.ceptu.repositories;
 
-import edu.unimagdalena.web.ceptu.services.dto.BestSellingProductDTO;
-import edu.unimagdalena.web.ceptu.services.dto.TopCategoryDTO;
+import edu.unimagdalena.web.ceptu.dto.BestSellingProductDTO;
+import edu.unimagdalena.web.ceptu.dto.TopCategoryDTO;
 import edu.unimagdalena.web.ceptu.entities.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

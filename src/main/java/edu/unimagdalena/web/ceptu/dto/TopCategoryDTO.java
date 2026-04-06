@@ -1,4 +1,4 @@
-package edu.unimagdalena.web.ceptu.services.dto;
+package edu.unimagdalena.web.ceptu.dto;
 
 public interface TopCategoryDTO {
     String getName();

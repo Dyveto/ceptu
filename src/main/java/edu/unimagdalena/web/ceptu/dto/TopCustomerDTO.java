@@ -1,4 +1,4 @@
-package edu.unimagdalena.web.ceptu.services.dto;
+package edu.unimagdalena.web.ceptu.dto;
 
 import edu.unimagdalena.web.ceptu.entities.Customer;
 

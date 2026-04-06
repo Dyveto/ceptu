@@ -3,7 +3,7 @@ package edu.unimagdalena.web.ceptu.repositories;
 import edu.unimagdalena.web.ceptu.dto.MonthlyIncomeDTO;
 import edu.unimagdalena.web.ceptu.dto.TopCustomerDTO;
 import edu.unimagdalena.web.ceptu.entities.Order;
-import edu.unimagdalena.web.ceptu.entities.OrderStatus;
+import edu.unimagdalena.web.ceptu.entities.enums.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;

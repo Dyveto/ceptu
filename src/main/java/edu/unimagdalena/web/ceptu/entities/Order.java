@@ -1,5 +1,6 @@
 package edu.unimagdalena.web.ceptu.entities;
 
+import edu.unimagdalena.web.ceptu.entities.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

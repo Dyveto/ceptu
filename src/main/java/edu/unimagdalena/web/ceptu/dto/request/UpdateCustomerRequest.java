@@ -3,7 +3,7 @@ package edu.unimagdalena.web.ceptu.dto.request;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-public record CreateCustomerRequest (
+public record UpdateCustomerRequest(
         @NotBlank String firstName,
         @NotBlank String lastName,
         @NotBlank @Email String email,

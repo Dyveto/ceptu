@@ -1,4 +1,4 @@
-package edu.unimagdalena.web.ceptu.exceptions;
+package edu.unimagdalena.web.ceptu.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorDetails> handleBusinessError(BusinessException ex, WebRequest request) {
         ErrorDetails error = new ErrorDetails(LocalDateTime.now(), ex.getMessage(), request.getDescription(false));
-        return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_ENTITY);
+        return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
     @ExceptionHandler(ConflictException.class)

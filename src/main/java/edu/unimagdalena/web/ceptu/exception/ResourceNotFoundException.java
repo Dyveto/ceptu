@@ -1,4 +1,4 @@
-package edu.unimagdalena.web.ceptu.exceptions;
+package edu.unimagdalena.web.ceptu.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

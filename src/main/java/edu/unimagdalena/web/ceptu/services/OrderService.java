@@ -13,4 +13,7 @@ public interface OrderService {
     List<OrderResponse> getAllOrders();
     List<OrderResponse> getOrdersByCustomerId(UUID customerId);
     OrderResponse cancelOrder(UUID id, CancelOrderRequest request);
+    OrderResponse payOrder(UUID id);
+    OrderResponse shipOrder(UUID id);
+    OrderResponse deliverOrder(UUID id);
 }

@@ -28,10 +28,10 @@ class CustomerControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private JsonMapper jsonMapper; // Reemplaza al viejo ObjectMapper
+    private JsonMapper jsonMapper;
 
     @MockitoBean
-    private CustomerService customerService; // Reemplaza al viejo @MockBean
+    private CustomerService customerService;
 
     @Test
     void createCustomer_WhenValidRequest_ShouldReturn201Created() throws Exception {
@@ -44,7 +44,7 @@ class CustomerControllerTest {
 
         mockMvc.perform(post("/api/v1/customers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonMapper.writeValueAsString(request))) // Usamos jsonMapper
+                        .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("laura@test.com"))
                 .andExpect(jsonPath("$.firstName").value("Laura"));

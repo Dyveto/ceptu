@@ -42,17 +42,16 @@ class OrderControllerTest {
         CreateOrderItemRequest itemRequest = new CreateOrderItemRequest(UUID.randomUUID(), 2);
         CreateOrderRequest request = new CreateOrderRequest(UUID.randomUUID(), UUID.randomUUID(), List.of(itemRequest));
 
-        // Aquí enviamos los 9 parámetros exactamente en el orden que los declaraste en tu DTO
         OrderResponse expectedResponse = new OrderResponse(
-                UUID.randomUUID(),          // 1. UUID id
-                UUID.randomUUID(),          // 2. UUID customerId
-                "Ana García",               // 3. String customerFullName
-                UUID.randomUUID(),          // 4. UUID addressId
-                OrderStatus.CREATED,        // 5. OrderStatus status
-                new BigDecimal("150.00"),   // 6. BigDecimal total
-                List.of(),                  // 7. List<OrderItemResponse> items
-                Instant.now(),              // 8. Instant createdAt
-                Instant.now()               // 9. Instant updatedAt
+                UUID.randomUUID(),              // UUID id
+                UUID.randomUUID(),              // UUID customerId
+                "Ana García",                   // String customerFullName
+                UUID.randomUUID(),              // UUID addressId
+                OrderStatus.CREATED,            // OrderStatus status
+                new BigDecimal("150.00"),   // BigDecimal total
+                List.of(),                      // List<OrderItemResponse> items
+                Instant.now(),                  // Instant createdAt
+                Instant.now()                   // Instant updatedAt
         );
 
         when(orderService.createOrder(any(CreateOrderRequest.class))).thenReturn(expectedResponse);
@@ -80,15 +79,15 @@ class OrderControllerTest {
 
         // Mismo orden exacto que arriba
         OrderResponse expectedResponse = new OrderResponse(
-                orderId,                    // 1. UUID id
-                UUID.randomUUID(),          // 2. UUID customerId
-                "Ana García",               // 3. String customerFullName
-                UUID.randomUUID(),          // 4. UUID addressId
-                OrderStatus.SHIPPED,        // 5. OrderStatus status
-                new BigDecimal("150.00"),   // 6. BigDecimal total
-                List.of(),                  // 7. List<OrderItemResponse> items
-                Instant.now(),              // 8. Instant createdAt
-                Instant.now()               // 9. Instant updatedAt
+                orderId,                        // UUID id
+                UUID.randomUUID(),              // UUID customerId
+                "Ana García",                   // String customerFullName
+                UUID.randomUUID(),              // UUID addressId
+                OrderStatus.SHIPPED,            // OrderStatus status
+                new BigDecimal("150.00"),   // BigDecimal total
+                List.of(),                      // List<OrderItemResponse> items
+                Instant.now(),                  // Instant createdAt
+                Instant.now()                   // Instant updatedAt
         );
 
         when(orderService.shipOrder(orderId)).thenReturn(expectedResponse);

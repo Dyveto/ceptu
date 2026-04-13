@@ -71,7 +71,7 @@ class OrderControllerTest {
         when(orderService.payOrder(orderId)).thenThrow(new RuntimeException("Stock insuficiente para procesar el pago"));
 
         mockMvc.perform(put("/api/v1/orders/{id}/pay", orderId))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test

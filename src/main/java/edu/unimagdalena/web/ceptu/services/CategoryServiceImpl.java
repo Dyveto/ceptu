@@ -5,7 +5,6 @@ import edu.unimagdalena.web.ceptu.dto.response.CategoryResponse;
 import edu.unimagdalena.web.ceptu.entities.Category;
 import edu.unimagdalena.web.ceptu.mappers.CategoryMapper;
 import edu.unimagdalena.web.ceptu.repositories.CategoryRepository;
-import edu.unimagdalena.web.ceptu.services.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

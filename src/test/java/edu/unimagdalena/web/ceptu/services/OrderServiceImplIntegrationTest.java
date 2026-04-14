@@ -8,7 +8,6 @@ import edu.unimagdalena.web.ceptu.entities.*;
 import edu.unimagdalena.web.ceptu.entities.enums.CustomerStatus;
 import edu.unimagdalena.web.ceptu.entities.enums.OrderStatus;
 import edu.unimagdalena.web.ceptu.repositories.*;
-import edu.unimagdalena.web.ceptu.services.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

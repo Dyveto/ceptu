@@ -4,7 +4,6 @@ import edu.unimagdalena.web.ceptu.dto.response.OrderItemResponse;
 import edu.unimagdalena.web.ceptu.entities.OrderItem;
 import edu.unimagdalena.web.ceptu.mappers.OrderItemMapper;
 import edu.unimagdalena.web.ceptu.repositories.OrderItemRepository;
-import edu.unimagdalena.web.ceptu.services.OrderItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

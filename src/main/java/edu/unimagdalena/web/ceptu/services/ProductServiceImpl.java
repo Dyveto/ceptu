@@ -9,7 +9,6 @@ import edu.unimagdalena.web.ceptu.entities.Product;
 import edu.unimagdalena.web.ceptu.mappers.ProductMapper;
 import edu.unimagdalena.web.ceptu.repositories.CategoryRepository;
 import edu.unimagdalena.web.ceptu.repositories.ProductRepository;
-import edu.unimagdalena.web.ceptu.services.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -7,7 +7,6 @@ import edu.unimagdalena.web.ceptu.entities.Customer;
 import edu.unimagdalena.web.ceptu.mappers.AddressMapper;
 import edu.unimagdalena.web.ceptu.repositories.AddressRepository;
 import edu.unimagdalena.web.ceptu.repositories.CustomerRepository;
-import edu.unimagdalena.web.ceptu.services.AddressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

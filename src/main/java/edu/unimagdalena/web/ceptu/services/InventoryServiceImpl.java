@@ -5,7 +5,6 @@ import edu.unimagdalena.web.ceptu.dto.response.InventoryResponse;
 import edu.unimagdalena.web.ceptu.entities.Inventory;
 import edu.unimagdalena.web.ceptu.mappers.InventoryMapper;
 import edu.unimagdalena.web.ceptu.repositories.InventoryRepository;
-import edu.unimagdalena.web.ceptu.services.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

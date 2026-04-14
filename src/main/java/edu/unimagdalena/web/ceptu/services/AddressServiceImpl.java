@@ -4,6 +4,8 @@ import edu.unimagdalena.web.ceptu.dto.request.CreateAddressRequest;
 import edu.unimagdalena.web.ceptu.dto.response.AddressResponse;
 import edu.unimagdalena.web.ceptu.entities.Address;
 import edu.unimagdalena.web.ceptu.entities.Customer;
+import edu.unimagdalena.web.ceptu.exception.ConflictException;
+import edu.unimagdalena.web.ceptu.exception.ResourceNotFoundException;
 import edu.unimagdalena.web.ceptu.mappers.AddressMapper;
 import edu.unimagdalena.web.ceptu.repositories.AddressRepository;
 import edu.unimagdalena.web.ceptu.repositories.CustomerRepository;
@@ -26,17 +28,13 @@ public class AddressServiceImpl implements AddressService {
     @Override
     @Transactional
     public AddressResponse createAddress(UUID customerId, CreateAddressRequest request) {
-        // Validar que el cliente exista
         Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + customerId));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + customerId));
 
-        // Mapear los datos de la dirección
         Address address = addressMapper.toEntity(request);
         
-        // Asignar el cliente a la dirección
         address.setCustomer(customer);
 
-        // Guardar en la base de datos
         Address savedAddress = addressRepository.save(address);
         
         return addressMapper.toResponse(savedAddress);
@@ -46,7 +44,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional(readOnly = true)
     public AddressResponse getAddressById(UUID id) {
         Address address = addressRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Dirección no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Dirección no encontrada con ID: " + id));
         return addressMapper.toResponse(address);
     }
 
@@ -63,9 +61,8 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public AddressResponse updateAddress(UUID id, CreateAddressRequest request) {
         Address address = addressRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Dirección no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Dirección no encontrada con ID: " + id));
 
-        // Actualizamos los campos
         address.setStreet(request.street());
         address.setCity(request.city());
         address.setState(request.state());
@@ -79,11 +76,10 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public void deleteAddress(UUID id) {
         Address address = addressRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Dirección no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Dirección no encontrada con ID: " + id));
         
-        // Evitar borrar si hay órdenes usando esta dirección
         if (address.getOrders() != null && !address.getOrders().isEmpty()) {
-            throw new RuntimeException("No se puede eliminar la dirección porque tiene órdenes asociadas.");
+            throw new ConflictException("No se puede eliminar la dirección porque tiene órdenes asociadas.");
         }
         
         addressRepository.deleteById(id);

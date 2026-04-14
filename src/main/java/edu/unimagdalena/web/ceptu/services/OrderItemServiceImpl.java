@@ -2,6 +2,7 @@ package edu.unimagdalena.web.ceptu.services;
 
 import edu.unimagdalena.web.ceptu.dto.response.OrderItemResponse;
 import edu.unimagdalena.web.ceptu.entities.OrderItem;
+import edu.unimagdalena.web.ceptu.exception.ResourceNotFoundException;
 import edu.unimagdalena.web.ceptu.mappers.OrderItemMapper;
 import edu.unimagdalena.web.ceptu.repositories.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class OrderItemServiceImpl implements OrderItemService {
     @Transactional(readOnly = true)
     public OrderItemResponse getOrderItemById(UUID id) {
         OrderItem orderItem = orderItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ítem de orden no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Ítem de orden no encontrado con ID: " + id));
         return orderItemMapper.toResponse(orderItem);
     }
 

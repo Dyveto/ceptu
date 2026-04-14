@@ -5,6 +5,7 @@ import edu.unimagdalena.web.ceptu.dto.request.UpdateCustomerRequest;
 import edu.unimagdalena.web.ceptu.dto.response.CustomerResponse;
 import edu.unimagdalena.web.ceptu.entities.Customer;
 import edu.unimagdalena.web.ceptu.entities.enums.CustomerStatus;
+import edu.unimagdalena.web.ceptu.exception.ResourceNotFoundException;
 import edu.unimagdalena.web.ceptu.mappers.CustomerMapper;
 import edu.unimagdalena.web.ceptu.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional(readOnly = true)
     public CustomerResponse getCustomerById(UUID id) {
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + id));
         return customerMapper.toResponse(customer);
     }
 
@@ -50,7 +51,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public CustomerResponse updateCustomer(UUID id, UpdateCustomerRequest request) {
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + id));
 
         customer.setFirstName(request.firstName());
         customer.setLastName(request.lastName());
@@ -64,7 +65,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public void deleteCustomer(UUID id) {
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + id));
         
         customer.setStatus(CustomerStatus.INACTIVE); 
         customerRepository.save(customer);

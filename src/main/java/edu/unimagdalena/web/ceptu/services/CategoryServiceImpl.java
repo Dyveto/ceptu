@@ -3,6 +3,8 @@ package edu.unimagdalena.web.ceptu.services;
 import edu.unimagdalena.web.ceptu.dto.request.CreateCategoryRequest;
 import edu.unimagdalena.web.ceptu.dto.response.CategoryResponse;
 import edu.unimagdalena.web.ceptu.entities.Category;
+import edu.unimagdalena.web.ceptu.exception.ConflictException;
+import edu.unimagdalena.web.ceptu.exception.ResourceNotFoundException;
 import edu.unimagdalena.web.ceptu.mappers.CategoryMapper;
 import edu.unimagdalena.web.ceptu.repositories.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +34,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public CategoryResponse getCategoryById(UUID id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
         return categoryMapper.toResponse(category);
     }
 
@@ -48,7 +50,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryResponse updateCategory(UUID id, CreateCategoryRequest request) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
         
         category.setName(request.name());
         category.setDescription(request.description());
@@ -60,11 +62,10 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void deleteCategory(UUID id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
         
-        // No permitir borrar si tiene productos
         if (category.getProducts() != null && !category.getProducts().isEmpty()) {
-            throw new RuntimeException("No se puede eliminar la categoría porque tiene productos asociados.");
+            throw new ConflictException("No se puede eliminar la categoría porque tiene productos asociados.");
         }
         
         categoryRepository.deleteById(id);

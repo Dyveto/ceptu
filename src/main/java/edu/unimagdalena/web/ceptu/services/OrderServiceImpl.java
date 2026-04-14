@@ -7,6 +7,9 @@ import edu.unimagdalena.web.ceptu.dto.response.OrderResponse;
 import edu.unimagdalena.web.ceptu.entities.*;
 import edu.unimagdalena.web.ceptu.entities.enums.CustomerStatus;
 import edu.unimagdalena.web.ceptu.entities.enums.OrderStatus;
+import edu.unimagdalena.web.ceptu.exception.BusinessException;
+import edu.unimagdalena.web.ceptu.exception.ConflictException;
+import edu.unimagdalena.web.ceptu.exception.ResourceNotFoundException;
 import edu.unimagdalena.web.ceptu.mappers.OrderMapper;
 import edu.unimagdalena.web.ceptu.repositories.*;
 import lombok.RequiredArgsConstructor;
@@ -35,25 +38,23 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
         Customer customer = customerRepository.findById(request.customerId())
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
 
-        //  El cliente debe estar activo
         if (customer.getStatus() != CustomerStatus.ACTIVE) {
-            throw new RuntimeException("El cliente debe estar activo para realizar pedidos");
+            throw new ConflictException("El cliente debe estar activo para realizar pedidos");
         }
 
         Address address = addressRepository.findById(request.addressId())
-                .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Dirección no encontrada"));
 
-        //  La dirección debe pertenecer al cliente
         if (!address.getCustomer().getId().equals(customer.getId())) {
-            throw new RuntimeException("La dirección no pertenece al cliente especificado");
+            throw new BusinessException("La dirección no pertenece al cliente especificado");
         }
 
         Order order = Order.builder()
                 .customer(customer)
                 .address(address)
-                .status(OrderStatus.CREATED) //  Estado inicial siempre CREATED
+                .status(OrderStatus.CREATED)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .total(BigDecimal.ZERO)
@@ -65,14 +66,12 @@ public class OrderServiceImpl implements OrderService {
 
         for (CreateOrderItemRequest itemReq : request.items()) {
             Product product = productRepository.findById(itemReq.productId())
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + itemReq.productId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado: " + itemReq.productId()));
 
-            //  El producto debe existir y estar activo
             if (!product.isActive()) {
-                throw new RuntimeException("El producto " + product.getName() + " está inactivo.");
+                throw new BusinessException("El producto " + product.getName() + " está inactivo.");
             }
 
-            //  Precio unitario se toma del producto al momento de creación
             BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(itemReq.quantity()));
             grandTotal = grandTotal.add(subtotal);
 
@@ -89,7 +88,6 @@ public class OrderServiceImpl implements OrderService {
 
         order.setTotal(grandTotal);
 
-        // Registro de trazabilidad inicial
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
                 .previousStatus(null)
@@ -107,7 +105,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(UUID id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada con ID: " + id));
         return orderMapper.toResponse(order);
     }
 
@@ -132,19 +130,16 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse cancelOrder(UUID id, CancelOrderRequest request) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada con ID: " + id));
 
-        //  No se puede cancelar una orden ya entregada
         if (order.getStatus() == OrderStatus.DELIVERED) {
-            throw new RuntimeException("No se puede cancelar una orden ya entregada");
+            throw new BusinessException("No se puede cancelar una orden ya entregada");
         }
 
         if (order.getStatus() == OrderStatus.CANCELLED) {
-            throw new RuntimeException("La orden ya se encuentra cancelada");
+            throw new ConflictException("La orden ya se encuentra cancelada");
         }
 
-        // Solo se revierte stock si el pedido ya fue pagado o enviado
-        // Si está en CREATED, no se hace nada porque el stock no se había descontado
         if (order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.SHIPPED) {
             for (OrderItem item : order.getOrderItems()) {
                 Inventory inventory = item.getProduct().getInventory();
@@ -175,22 +170,19 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse payOrder(UUID id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada con ID: " + id));
 
-        //  Solo un pedido en estado CREATED puede pasar a PAID
         if (order.getStatus() != OrderStatus.CREATED) {
-            throw new RuntimeException("Solo los pedidos en estado CREATED pueden ser pagados. Estado actual: " + order.getStatus());
+            throw new BusinessException("Solo los pedidos en estado CREATED pueden ser pagados. Estado actual: " + order.getStatus());
         }
 
-        //  Validar stock suficiente para todos los ítems antes de pagar
         for (OrderItem item : order.getOrderItems()) {
             Inventory inventory = item.getProduct().getInventory();
             if (inventory.getAvailableStock() < item.getQuantity()) {
-                throw new RuntimeException("Stock insuficiente para procesar el pago del producto: " + item.getProduct().getName());
+                throw new BusinessException("Stock insuficiente para procesar el pago del producto: " + item.getProduct().getName());
             }
         }
 
-        //  Descontar el inventario disponible
         for (OrderItem item : order.getOrderItems()) {
             Inventory inventory = item.getProduct().getInventory();
             inventory.setAvailableStock(inventory.getAvailableStock() - item.getQuantity());
@@ -202,7 +194,6 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.PAID);
         order.setUpdatedAt(Instant.now());
 
-        // Registrar trazabilidad
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
                 .previousStatus(previousStatus)
@@ -220,11 +211,10 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse shipOrder(UUID id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada con ID: " + id));
 
-        //  Solo un pedido PAID puede pasar a SHIPPED
         if (order.getStatus() != OrderStatus.PAID) {
-            throw new RuntimeException("Solo los pedidos pagados (PAID) pueden ser enviados. Estado actual: " + order.getStatus());
+            throw new BusinessException("Solo los pedidos pagados (PAID) pueden ser enviados. Estado actual: " + order.getStatus());
         }
 
         String previousStatus = order.getStatus().name();
@@ -248,11 +238,10 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse deliverOrder(UUID id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada con ID: " + id));
 
-        //  Solo un pedido SHIPPED puede pasar a DELIVERED
         if (order.getStatus() != OrderStatus.SHIPPED) {
-            throw new RuntimeException("Solo los pedidos enviados (SHIPPED) pueden marcarse como entregados. Estado actual: " + order.getStatus());
+            throw new BusinessException("Solo los pedidos enviados (SHIPPED) pueden marcarse como entregados. Estado actual: " + order.getStatus());
         }
 
         String previousStatus = order.getStatus().name();

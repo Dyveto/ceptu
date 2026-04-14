@@ -6,6 +6,7 @@ import edu.unimagdalena.web.ceptu.dto.response.ProductResponse;
 import edu.unimagdalena.web.ceptu.entities.Category;
 import edu.unimagdalena.web.ceptu.entities.Inventory;
 import edu.unimagdalena.web.ceptu.entities.Product;
+import edu.unimagdalena.web.ceptu.exception.ResourceNotFoundException;
 import edu.unimagdalena.web.ceptu.mappers.ProductMapper;
 import edu.unimagdalena.web.ceptu.repositories.CategoryRepository;
 import edu.unimagdalena.web.ceptu.repositories.ProductRepository;
@@ -30,13 +31,13 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse createProduct(CreateProductRequest request) {
         Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + request.categoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + request.categoryId()));
 
         Product product = productMapper.toEntity(request);
         product.setCategory(category);
 
         Inventory inventory = Inventory.builder()
-                .product(product) // Relación inversa (dueño de la FK)
+                .product(product)
                 .availableStock(request.initialStock())
                 .minimumStock(request.minimumStock())
                 .updatedAt(Instant.now())
@@ -53,7 +54,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductResponse getProductById(UUID id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
         return productMapper.toResponse(product);
     }
 
@@ -69,11 +70,11 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse updateProduct(UUID id, UpdateProductRequest request) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
 
         if (!product.getCategory().getId().equals(request.categoryId())) {
             Category newCategory = categoryRepository.findById(request.categoryId())
-                    .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + request.categoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + request.categoryId()));
             product.setCategory(newCategory);
         }
 
@@ -88,7 +89,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void deleteProduct(UUID id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
         
         product.setActive(false);
         productRepository.save(product);

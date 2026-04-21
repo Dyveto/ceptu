@@ -2,11 +2,14 @@ package edu.unimagdalena.web.ceptu.controllers;
 
 import edu.unimagdalena.web.ceptu.dto.BestSellingProductDTO;
 import edu.unimagdalena.web.ceptu.entities.Product;
+import edu.unimagdalena.web.ceptu.security.jwt.JwtService;
 import edu.unimagdalena.web.ceptu.services.ReportService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest; // Import actualizado
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean; // Import actualizado
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -21,7 +24,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ReportController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ReportControllerTest {
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @Autowired
     private MockMvc mockMvc;

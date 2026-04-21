@@ -1,4 +1,4 @@
-package edu.unimagdalena.web.ceptu.security;
+package edu.unimagdalena.web.ceptu.security.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

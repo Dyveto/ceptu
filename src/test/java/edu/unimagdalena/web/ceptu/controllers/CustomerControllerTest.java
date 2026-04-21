@@ -3,11 +3,14 @@ package edu.unimagdalena.web.ceptu.controllers;
 import edu.unimagdalena.web.ceptu.dto.request.CreateCustomerRequest;
 import edu.unimagdalena.web.ceptu.dto.response.CustomerResponse;
 import edu.unimagdalena.web.ceptu.entities.enums.CustomerStatus;
+import edu.unimagdalena.web.ceptu.security.jwt.JwtService;
 import edu.unimagdalena.web.ceptu.services.CustomerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
@@ -22,7 +25,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CustomerController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class CustomerControllerTest {
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -60,3 +70,4 @@ class CustomerControllerTest {
                 .andExpect(status().isBadRequest());
     }
 }
+

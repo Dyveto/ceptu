@@ -4,12 +4,15 @@ import edu.unimagdalena.web.ceptu.dto.request.CreateProductRequest;
 import edu.unimagdalena.web.ceptu.dto.request.UpdateInventoryRequest;
 import edu.unimagdalena.web.ceptu.dto.response.InventoryResponse;
 import edu.unimagdalena.web.ceptu.dto.response.ProductResponse;
+import edu.unimagdalena.web.ceptu.security.jwt.JwtService;
 import edu.unimagdalena.web.ceptu.services.InventoryService;
 import edu.unimagdalena.web.ceptu.services.ProductService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
@@ -26,18 +29,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ProductController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ProductControllerTest {
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private JsonMapper jsonMapper; // Actualizado a Jackson 3
+    private JsonMapper jsonMapper;
 
-    @MockitoBean // Actualizado para Spring Boot 4
+    @MockitoBean
     private ProductService productService;
 
-    @MockitoBean // Actualizado para Spring Boot 4
+    @MockitoBean
     private InventoryService inventoryService;
 
     @Test

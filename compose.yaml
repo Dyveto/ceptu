@@ -1,9 +1,0 @@
-services:
-  postgres:
-    image: 'postgres:latest'
-    environment:
-      - 'POSTGRES_DB=ceptu'
-      - 'POSTGRES_PASSWORD=5fw}w82mO>O4x1!HUPB9RqZ197wP_shh'
-      - 'POSTGRES_USER=postgres'
-    ports:
-      - '5433:5432'

@@ -57,6 +57,7 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setLastName(request.lastName());
         customer.setEmail(request.email());
         customer.setPhone(request.phone());
+        customer.setStatus(request.status());
 
         return customerMapper.toResponse(customerRepository.save(customer));
     }
@@ -66,8 +67,8 @@ public class CustomerServiceImpl implements CustomerService {
     public void deleteCustomer(UUID id) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + id));
-        
-        customer.setStatus(CustomerStatus.INACTIVE); 
+
+        customer.setStatus(CustomerStatus.INACTIVE);
         customerRepository.save(customer);
     }
 }

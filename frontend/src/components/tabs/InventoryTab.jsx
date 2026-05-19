@@ -7,14 +7,14 @@ export default function InventoryTab() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Controladores de visibilidad para formularios
   const [showCatForm, setShowCatForm] = useState(false);
   const [showProdForm, setShowProdForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null); // Producto al que se le ajustará stock
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editingProductDetails, setEditingProductDetails] = useState(null);
 
-  // Estados de formularios
   const [catName, setCatName] = useState('');
   const [catDescription, setCatDescription] = useState('');
+
   const [prodName, setProdName] = useState('');
   const [prodSku, setProdSku] = useState('');
   const [prodPrice, setProdPrice] = useState('');
@@ -22,9 +22,14 @@ export default function InventoryTab() {
   const [prodMinimumStock, setProdMinimumStock] = useState('');
   const [prodCategoryId, setProdCategoryId] = useState('');
 
-  // Estados para el endpoint obligatorio: PUT /api/products/{id}/inventory (UpdateInventoryRequest)
   const [availableStock, setAvailableStock] = useState('');
   const [minimumStock, setMinimumStock] = useState('');
+
+  const [editName, setEditName] = useState('');
+  const [editSku, setEditSku] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [editCategoryId, setEditCategoryId] = useState('');
+  const [editActive, setEditActive] = useState(true);
 
   const [formSuccess, setFormSuccess] = useState('');
   const [formError, setFormError] = useState('');
@@ -92,7 +97,6 @@ export default function InventoryTab() {
     }
   };
 
-  // Enviar actualización aislada de inventario (PUT /api/products/{id}/inventory)
   const handleUpdateInventory = async (e) => {
     e.preventDefault();
     setFormError(''); setFormSuccess('');
@@ -113,13 +117,48 @@ export default function InventoryTab() {
     }
   };
 
+  const handleUpdateProductDetails = async (e) => {
+    e.preventDefault();
+    setFormError(''); setFormSuccess('');
+    if (!editCategoryId) return setFormError('Selecciona una categoría válida.');
+
+    try {
+      await apiFetch(`/products/${editingProductDetails.id}`, {
+        method: 'PUT',
+        body: {
+          name: editName,
+          sku: editSku,
+          price: parseFloat(editPrice),
+          categoryId: editCategoryId,
+          active: editActive
+        }
+      });
+      setFormSuccess(`¡Datos del producto "${editName}" modificados con éxito!`);
+      setEditingProductDetails(null);
+      loadInventoryData();
+    } catch (err) {
+      setFormError(err.message || 'Error al actualizar los datos del producto');
+    }
+  };
+
   const startInventoryEdit = (product) => {
     setEditingProduct(product);
-    // Cargar los valores actuales si vienen en la respuesta del producto (o poner vacíos)
+    setEditingProductDetails(null);
     setAvailableStock(product.inventory?.availableStock || product.availableStock || 0);
     setMinimumStock(product.inventory?.minimumStock || product.minimumStock || 0);
-    setShowCatForm(false);
-    setShowProdForm(false);
+    setShowCatForm(false); setShowProdForm(false);
+    setFormSuccess(''); setFormError('');
+  };
+
+  const startProductDetailsEdit = (product) => {
+    setEditingProductDetails(product);
+    setEditingProduct(null);
+    setEditName(product.name);
+    setEditSku(product.sku);
+    setEditPrice(product.price || '');
+    setEditCategoryId(product.category?.id || '');
+    setEditActive(product.active ?? true);
+    setShowCatForm(false); setShowProdForm(false);
     setFormSuccess(''); setFormError('');
   };
 
@@ -137,16 +176,16 @@ export default function InventoryTab() {
 
       {/* ACCIONES DE CONTROL */}
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-        <button onClick={() => { setShowCatForm(!showCatForm); setShowProdForm(false); setEditingProduct(null); }} style={{ background: showCatForm ? '#666' : '#34c759', width: 'auto', padding: '0.6rem 1.2rem' }}>
+        <button onClick={() => { setShowCatForm(!showCatForm); setShowProdForm(false); setEditingProduct(null); setEditingProductDetails(null); }} style={{ background: showCatForm ? '#666' : '#34c759', width: 'auto', padding: '0.6rem 1.2rem' }}>
           {showCatForm ? '❌ Cancelar' : '➕ Nueva Categoría'}
         </button>
-        <button onClick={() => { setShowProdForm(!showProdForm); setShowCatForm(false); setEditingProduct(null); }} style={{ background: showProdForm ? '#666' : '#0076ff', width: 'auto', padding: '0.6rem 1.2rem' }}>
+        <button onClick={() => { setShowProdForm(!showProdForm); setShowCatForm(false); setEditingProduct(null); setEditingProductDetails(null); }} style={{ background: showProdForm ? '#666' : '#0076ff', width: 'auto', padding: '0.6rem 1.2rem' }}>
           {showProdForm ? '❌ Cancelar' : '📦 Registrar Producto'}
         </button>
       </div>
 
       {/* COMPONENTE DE FORMULARIOS DESPLEGABLES */}
-      {(showCatForm || showProdForm || editingProduct) && (
+      {(showCatForm || showProdForm || editingProduct || editingProductDetails) && (
         <div style={{ background: '#f9f9fb', padding: '1.5rem', borderRadius: '8px', border: '1px solid #eee', marginBottom: '2rem' }}>
           
           {/* Formulario Categorías */}
@@ -180,7 +219,7 @@ export default function InventoryTab() {
             </form>
           )}
 
-          {/* Formulario Especial: Ajustar Existencias de Inventario */}
+          {/* Formulario Especial: Ajustar Existencias de Inventario (HU-03) */}
           {editingProduct && (
             <form onSubmit={handleUpdateInventory} style={{ maxWidth: '600px' }}>
               <h4 style={{ margin: '0 0 0.5rem 0' }}>🔄 Administrar Existencias (HU-03)</h4>
@@ -202,6 +241,50 @@ export default function InventoryTab() {
             </form>
           )}
 
+          {/* FORMULARIO NUEVO: Modificar Datos Básicos (PUT /api/products/{id}) */}
+          {editingProductDetails && (
+            <form onSubmit={handleUpdateProductDetails}>
+              <h4 style={{ margin: '0 0 0.5rem 0', color: '#f39c12' }}>✏️ Modificar Catálogo de Producto</h4>
+              <p style={{ margin: '0 0 1rem 0', color: '#666' }}>ID Comercial: <code>{editingProductDetails.id}</code></p>
+              
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.2rem', fontSize: '0.85rem', fontWeight: 'bold' }}>Nombre del Artículo</label>
+                  <input type="text" value={editName} onChange={e => setEditName(e.target.value)} required />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.2rem', fontSize: '0.85rem', fontWeight: 'bold' }}>Código SKU</label>
+                  <input type="text" value={editSku} onChange={e => setEditSku(e.target.value)} required />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.2rem', fontSize: '0.85rem', fontWeight: 'bold' }}>Precio Comercial ($)</label>
+                  <input type="number" step="0.01" value={editPrice} onChange={e => setEditPrice(e.target.value)} required />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.2rem', fontSize: '0.85rem', fontWeight: 'bold' }}>Estado Operativo</label>
+                  <select value={editActive} onChange={e => setEditActive(e.target.value === 'true')} style={{ padding: '0.5rem', width: '100%', borderRadius: '4px', border: '1px solid #ccc' }}>
+                    <option value="true">Activo / Visible</option>
+                    <option value="false">Inactivo / Oculto</option>
+                  </select>
+                </div>
+              </div>
+
+              <label style={{ display: 'block', marginTop: '0.75rem', marginBottom: '0.2rem', fontSize: '0.85rem', fontWeight: 'bold' }}>Categoría Asignada</label>
+              <select value={editCategoryId} onChange={e => setEditCategoryId(e.target.value)} style={{ display: 'block', width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} required>
+                <option value="">-- Elige la Categoría Requerida --</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem' }}>
+                <button type="submit" style={{ background: '#f39c12', width: 'auto', margin: 0 }}>Guardar Cambios Básicos</button>
+                <button type="button" onClick={() => setEditingProductDetails(null)} style={{ background: '#666', width: 'auto', margin: 0 }}>Cancelar</button>
+              </div>
+            </form>
+          )}
+
         </div>
       )}
 
@@ -212,31 +295,40 @@ export default function InventoryTab() {
           <tr>
             <th>SKU</th>
             <th>Nombre del Producto</th>
+            <th>Categoría</th>
             <th>Precio</th>
             <th>Stock Actual</th>
-            <th>Acción</th>
+            <th>Acciones Colectoras</th>
           </tr>
         </thead>
         <tbody>
           {products.length === 0 ? (
-            <tr><td colSpan="5">No hay productos registrados en base de datos.</td></tr>
+            <tr><td colSpan="6">No hay productos registrados en base de datos.</td></tr>
           ) : (
             products.map(p => {
-              // Manejar si el stock viene anidado en el objeto inventory (1:1) o plano
               const currentStock = p.inventory ? p.inventory.availableStock : (p.availableStock ?? p.initialStock ?? 0);
+              const minStock = p.inventory ? p.inventory.minimumStock : (p.minimumStock || 0);
+              
               return (
                 <tr key={p.id}>
                   <td><code style={{ background: '#eee', padding: '2px 4px', borderRadius: '3px' }}>{p.sku || 'N/A'}</code></td>
-                  <td><strong>{p.name}</strong></td>
+                  <td>
+                    <strong>{p.name}</strong> 
+                    {!p.active && <span style={{ marginLeft: '6px', background: '#e11d48', color: '#fff', padding: '1px 5px', borderRadius: '3px', fontSize: '0.7rem' }}>INACTIVO</span>}
+                  </td>
+                  <td style={{ color: '#555', fontSize: '0.9rem' }}>{p.category?.name || 'General'}</td>
                   <td>${p.price?.toLocaleString()}</td>
                   <td>
-                    <span style={{ fontWeight: 'bold', color: currentStock <= (p.inventory?.minimumStock || p.minimumStock) ? 'red' : 'inherit' }}>
+                    <span style={{ fontWeight: 'bold', color: currentStock <= minStock ? 'red' : 'inherit' }}>
                       {currentStock} unds
                     </span>
                   </td>
-                  <td>
-                    <button onClick={() => startInventoryEdit(p)} style={{ width: 'auto', padding: '4px 10px', fontSize: '0.85rem', margin: 0, background: '#f39c12' }}>
-                      ⚙️ Ajustar Stock
+                  <td style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => startProductDetailsEdit(p)} style={{ width: 'auto', padding: '4px 10px', fontSize: '0.85rem', margin: 0, background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1' }}>
+                      ✏️ Editar Info
+                    </button>
+                    <button onClick={() => startInventoryEdit(p)} style={{ width: 'auto', padding: '4px 10px', fontSize: '0.85rem', margin: 0, background: '#3b82f6' }}>
+                      🔄 Stock
                     </button>
                   </td>
                 </tr>

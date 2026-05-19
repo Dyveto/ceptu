@@ -6,24 +6,21 @@ export default function OrdersTab() {
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [customerAddresses, setCustomerAddresses] = useState([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // Estados para la nueva orden
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [items, setItems] = useState([{ productId: '', quantity: 1 }]);
 
-  // Estados para cancelar una orden
   const [cancelingOrderId, setCancelingOrderId] = useState(null);
   const [cancelNotes, setCancelNotes] = useState('');
 
   const [formSuccess, setFormSuccess] = useState('');
   const [formError, setFormError] = useState('');
 
-  // Cargar datos iniciales necesarios
   const loadInitialData = async () => {
     setLoading(true); setError('');
     try {
@@ -46,7 +43,6 @@ export default function OrdersTab() {
     loadInitialData();
   }, []);
 
-  // Cargar direcciones del cliente cuando se selecciona en el formulario
   useEffect(() => {
     if (!selectedCustomerId) {
       setCustomerAddresses([]);
@@ -56,7 +52,7 @@ export default function OrdersTab() {
       try {
         const res = await apiFetch(`/customers/${selectedCustomerId}/addresses`, { method: 'GET' });
         setCustomerAddresses(res || []);
-        setSelectedAddressId(''); // Resetear dirección seleccionada
+        setSelectedAddressId('');
       } catch (err) {
         setFormError('Error al cargar las direcciones del cliente seleccionado.');
       }
@@ -64,9 +60,6 @@ export default function OrdersTab() {
     fetchAddresses();
   }, [selectedCustomerId]);
 
-  /* ==========================================================================
-     MANEJO DE ÍTEMS DINÁMICOS
-     ========================================================================== */
   const handleAddItem = () => {
     setItems([...items, { productId: '', quantity: 1 }]);
   };
@@ -81,14 +74,18 @@ export default function OrdersTab() {
     setItems(newItems);
   };
 
-  /* ==========================================================================
-     ACCIONES DISPARADORAS DE ENDPOINTS (POST & PUT)
-     ========================================================================== */
+  const calculateEstimatedTotal = () => {
+    return items.reduce((sum, item) => {
+      const productInfo = products.find(p => p.id === item.productId);
+      const price = productInfo ? productInfo.price : 0;
+      return sum + (price * parseInt(item.quantity || 0));
+    }, 0);
+  };
+
   const handleCreateOrder = async (e) => {
     e.preventDefault();
     setFormError(''); setFormSuccess('');
 
-    // Validar ítems vacíos
     if (items.some(item => !item.productId || item.quantity < 1)) {
       setFormError('Por favor, selecciona productos y cantidades válidas.');
       return;
@@ -105,7 +102,6 @@ export default function OrdersTab() {
       });
       setFormSuccess('¡Pedido registrado con éxito en estado CREATED!');
       setShowCreateForm(false);
-      // Resetear formulario
       setSelectedCustomerId(''); setSelectedAddressId(''); setItems([{ productId: '', quantity: 1 }]);
       loadInitialData();
     } catch (err) {
@@ -162,13 +158,20 @@ export default function OrdersTab() {
       {showCreateForm && (
         <form onSubmit={handleCreateOrder} style={{ background: '#f9f9fb', padding: '1.5rem', borderRadius: '8px', border: '1px solid #eee', marginBottom: '2rem' }}>
           <h4>Formulario de Pedido Comercial</h4>
-          
+
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: 'bold' }}>Cliente</label>
               <select value={selectedCustomerId} onChange={e => setSelectedCustomerId(e.target.value)} required>
                 <option value="">-- Selecciona Cliente --</option>
-                {customers.map(c => <option key={c.id} value={c.id}>{c.firstName} {c.lastName} ({c.email})</option>)}
+                {customers
+                  .filter(c => c.status === 'ACTIVE' || !c.status)
+                  .map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.firstName} {c.lastName} ({c.email})
+                    </option>
+                  ))
+                }
               </select>
             </div>
 
@@ -189,9 +192,9 @@ export default function OrdersTab() {
                 <option value="">-- Selecciona Producto --</option>
                 {products.map(p => <option key={p.id} value={p.id}>{p.name} (${p.price?.toLocaleString()})</option>)}
               </select>
-              
+
               <input style={{ flex: 0.5, margin: 0 }} type="number" min="1" placeholder="Cant" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} required />
-              
+
               {items.length > 1 && (
                 <button type="button" onClick={() => handleRemoveItem(index)} style={{ background: '#ff3b30', width: 'auto', margin: 0, padding: '0.5rem 0.8rem' }}>🗑️</button>
               )}
@@ -202,7 +205,15 @@ export default function OrdersTab() {
             ➕ Añadir Otro Producto
           </button>
 
-          <button type="submit" style={{ background: '#34c759', width: '100%', marginTop: '1.5rem', fontSize: '1rem' }}>
+          {/* 💰 NUEVO: Cuadro visual de pre-cálculo en tiempo real */}
+          <div style={{ margin: '1.5rem 0 0.5rem 0', padding: '1rem', background: '#fff', border: '1px dashed #cbd5e1', borderRadius: '6px', textAlign: 'right' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#64748b' }}>Total Estimado (UI Pre-calc): </span>
+            <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#0f172a' }}>
+              ${calculateEstimatedTotal().toLocaleString()} COP
+            </span>
+          </div>
+
+          <button type="submit" style={{ background: '#34c759', width: '100%', marginTop: '1rem', fontSize: '1rem' }}>
             Procesar y Guardar Pedido
           </button>
         </form>
@@ -228,24 +239,32 @@ export default function OrdersTab() {
         <thead>
           <tr>
             <th>ID Pedido</th>
+            <th>Cliente</th>
             <th>Fecha</th>
+            <th>Total Facturado</th>
             <th>Estado Actual</th>
             <th>Acciones de Flujo</th>
           </tr>
         </thead>
         <tbody>
           {orders.length === 0 ? (
-            <tr><td colSpan="4">No se han procesado pedidos aún.</td></tr>
+            <tr><td colSpan="6">No se han procesado pedidos aún.</td></tr>
           ) : (
             orders.map(o => (
               <tr key={o.id}>
-                <td><small style={{ color: '#888' }}>{o.id}</small></td>
+                <td><code style={{ background: '#f1f5f9', padding: '2px 4px', borderRadius: '4px' }}><small style={{ color: '#475569' }}>{o.id?.substring(0, 8)}...</small></code></td>
+
+                <td><strong>{o.customerFullName || 'Cliente General'}</strong></td>
+
                 <td>{o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'Reciente'}</td>
+
+                <td style={{ fontWeight: 'bold', color: '#334155' }}>${o.total?.toLocaleString()} COP</td>
+
                 <td>
-                  <span style={{ 
-                    background: o.status === 'DELIVERED' ? '#e8f5e9' : o.status === 'CANCELLED' ? '#ffebee' : o.status === 'CREATED' ? '#fff3e0' : '#e1f5fe', 
-                    color: o.status === 'DELIVERED' ? '#2e7d32' : o.status === 'CANCELLED' ? '#c62828' : o.status === 'CREATED' ? '#ef6c00' : '#0288d1', 
-                    padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.85rem' 
+                  <span style={{
+                    background: o.status === 'DELIVERED' ? '#e8f5e9' : o.status === 'CANCELLED' ? '#ffebee' : o.status === 'CREATED' ? '#fff3e0' : '#e1f5fe',
+                    color: o.status === 'DELIVERED' ? '#2e7d32' : o.status === 'CANCELLED' ? '#c62828' : o.status === 'CREATED' ? '#ef6c00' : '#0288d1',
+                    padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.85rem'
                   }}>
                     {o.status}
                   </span>

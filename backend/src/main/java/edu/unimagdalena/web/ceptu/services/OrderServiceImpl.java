@@ -69,7 +69,6 @@ public class OrderServiceImpl implements OrderService {
                 throw new BusinessException("El producto " + product.getName() + " está inactivo.");
             }
 
-            // 🚨 REGLA DE NEGOCIO ATÓMICA: Validación y descuento inmediato de Stock
             Inventory inventory = inventoryRepository.findByProductId(product.getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Inventario no encontrado para el producto: " + product.getName()));
 

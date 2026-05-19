@@ -19,7 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     List<Order> findByCustomerId(UUID customerId);
 
-    // 🏆 HITO 5: Buscador Avanzado Blindado con COALESCE para Inferencia Atómica en Postgres
     @Query("""
             SELECT o FROM Order o
             WHERE o.customer.id = COALESCE(:customerId, o.customer.id)
@@ -39,7 +38,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             Pageable pageable
     );
 
-    // 🏆 HITO 5: Clientes con mayor facturación (Top Customers)
     @Query("""
             SELECT new edu.unimagdalena.web.ceptu.dto.response.TopCustomerResponse(
                 c.id,
@@ -59,7 +57,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             """)
     List<TopCustomerResponse> findTopCustomersByBilling(Pageable pageable);
 
-    // 🏆 HITO 5: Ingresos mensuales desglosados (Solo órdenes pagas/exitosas)
     @Query("""
             SELECT new edu.unimagdalena.web.ceptu.dto.response.MonthlyIncomeResponse(
                 YEAR(o.createdAt),

@@ -19,7 +19,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     List<Product> findByCategoryIdAndActiveTrue(UUID categoryId);
 
-    // 🏆 CORREGIDO: Mapeo exacto hacia LowStockProductResponse
     @Query("""
             SELECT new edu.unimagdalena.web.ceptu.dto.response.LowStockProductResponse(
                 p.id, 
@@ -42,7 +41,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             """)
     List<Product> findActiveProductsWithLowStock();
 
-    // 🏆 CORREGIDO: Mapeo exacto hacia BestSellingProductResponse cruzando fechas
     @Query("""
             SELECT new edu.unimagdalena.web.ceptu.dto.response.BestSellingProductResponse(
                 p.id, 

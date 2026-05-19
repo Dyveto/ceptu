@@ -6,22 +6,25 @@ export default function CustomersTab() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Controladores de visibilidad para formularios
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null); // Para controlar el flujo de edición
 
-  // Estados para la gestión de direcciones del cliente seleccionado
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
-  // Estados para el formulario de NUEVO CLIENTE (CreateCustomerRequest)
   const [custFirstName, setCustFirstName] = useState('');
   const [custLastName, setCustLastName] = useState('');
   const [custEmail, setCustEmail] = useState('');
   const [custPhone, setCustPhone] = useState('');
 
-  // Estados para el formulario de DIRECCIÓN (CreateAddressRequest)
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editStatus, setEditStatus] = useState('ACTIVE');
+
   const [street, setStreet] = useState('');
   const [city, setCity] = useState('');
   const [stateName, setStateName] = useState('');
@@ -31,7 +34,6 @@ export default function CustomersTab() {
   const [formSuccess, setFormSuccess] = useState('');
   const [formError, setFormError] = useState('');
 
-  // Función para cargar/refrescar la lista de clientes
   const fetchCustomers = async () => {
     setLoading(true); setError('');
     try {
@@ -48,8 +50,12 @@ export default function CustomersTab() {
     fetchCustomers();
   }, []);
 
-  // Cargar direcciones cuando se selecciona un cliente
   const handleSelectCustomer = async (customer) => {
+    if (selectedCustomer?.id === customer.id) {
+      closeAddressPanel();
+      return;
+    }
+
     setSelectedCustomer(customer);
     setAddresses([]);
     setShowAddressForm(false);
@@ -67,11 +73,12 @@ export default function CustomersTab() {
     }
   };
 
-  /* ==========================================================================
-     MANEJADORES DE ENVÍO (POST)
-     ========================================================================== */
-  
-  // Guardar nuevo cliente (POST /api/customers)
+  const closeAddressPanel = () => {
+    setSelectedCustomer(null);
+    setAddresses([]);
+    setShowAddressForm(false);
+  };
+
   const handleCreateCustomer = async (e) => {
     e.preventDefault();
     setFormError(''); setFormSuccess('');
@@ -88,18 +95,44 @@ export default function CustomersTab() {
       });
 
       setFormSuccess('¡Cliente registrado con éxito en Ceptu!');
-      // Limpiar campos y colapsar formulario
       setCustFirstName(''); setCustLastName(''); setCustEmail(''); setCustPhone('');
       setShowCustomerForm(false);
       
-      // Refrescar la tabla
       fetchCustomers();
     } catch (err) {
       setFormError(err.message || 'Error al registrar el cliente');
     }
   };
 
-  // Guardar nueva dirección (POST /api/customers/{id}/addresses)
+  const handleUpdateCustomer = async (e) => {
+    e.preventDefault();
+    setFormError(''); setFormSuccess('');
+
+    try {
+      const updatedData = await apiFetch(`/customers/${editingCustomer.id}`, {
+        method: 'PUT',
+        body: {
+          firstName: editFirstName,
+          lastName: editLastName,
+          email: editEmail,
+          phone: editPhone,
+          status: editStatus
+        }
+      });
+
+      setFormSuccess(`¡El perfil de "${editFirstName} ${editLastName}" fue actualizado con éxito!`);
+      
+      if (selectedCustomer?.id === editingCustomer.id) {
+        setSelectedCustomer(updatedData || { ...selectedCustomer, firstName: editFirstName, lastName: editLastName, status: editStatus });
+      }
+
+      setEditingCustomer(null);
+      fetchCustomers();
+    } catch (err) {
+      setFormError(err.message || 'Error al modificar el perfil del cliente');
+    }
+  };
+
   const handleCreateAddress = async (e) => {
     e.preventDefault();
     setFormError(''); setFormSuccess('');
@@ -114,12 +147,22 @@ export default function CustomersTab() {
       setStreet(''); setCity(''); setStateName(''); setZipCode(''); setCountry('');
       setShowAddressForm(false);
 
-      // Refrescar direcciones del cliente actual
       const updatedAddresses = await apiFetch(`/customers/${selectedCustomer.id}/addresses`, { method: 'GET' });
       setAddresses(updatedAddresses || []);
     } catch (err) {
       setFormError(err.message || 'Error al registrar la dirección');
     }
+  };
+
+  const startCustomerEdit = (customer) => {
+    setEditingCustomer(customer);
+    setEditFirstName(customer.firstName);
+    setEditLastName(customer.lastName);
+    setEditEmail(customer.email);
+    setEditPhone(customer.phone || '');
+    setEditStatus(customer.status || 'ACTIVE');
+    setShowCustomerForm(false);
+    setFormSuccess(''); setFormError('');
   };
 
   if (loading && customers.length === 0) return <p style={{ textAlign: 'center' }}>Consultando base de datos de clientes...</p>;
@@ -132,7 +175,7 @@ export default function CustomersTab() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ margin: 0 }}>Gestión de Clientes</h3>
           <button 
-            onClick={() => { setShowCustomerForm(!showCustomerForm); setFormSuccess(''); setFormError(''); }}
+            onClick={() => { setShowCustomerForm(!showCustomerForm); setEditingCustomer(null); setFormSuccess(''); setFormError(''); }}
             style={{ width: 'auto', padding: '0.5rem 1rem', background: showCustomerForm ? '#666' : '#28a745', margin: 0 }}
           >
             {showCustomerForm ? '❌ Cancelar' : '➕ Nuevo Cliente'}
@@ -148,7 +191,7 @@ export default function CustomersTab() {
           </div>
         )}
 
-        {/* Formulario Desplegable: Registrar Cliente */}
+        {/* Formulario Desplegable: Registrar Cliente (HU-04) */}
         {showCustomerForm && (
           <form onSubmit={handleCreateCustomer} style={{ background: '#f8f9fa', padding: '1.2rem', borderRadius: '6px', border: '1px solid #e9ecef', marginBottom: '1.5rem' }}>
             <h4 style={{ margin: '0 0 1rem 0' }}>Registrar Nuevo Cliente (HU-04)</h4>
@@ -164,6 +207,29 @@ export default function CustomersTab() {
           </form>
         )}
 
+        {/* ✏️ Formulario Desplegable: Modificar Cliente (PUT /api/customers/{id}) */}
+        {editingCustomer && (
+          <form onSubmit={handleUpdateCustomer} style={{ background: '#fff3cd', padding: '1.2rem', borderRadius: '6px', border: '1px solid #ffeeba', marginBottom: '1.5rem' }}>
+            <h4 style={{ margin: '0 0 1rem 0', color: '#856404' }}>✏️ Modificar Maestro de Cliente</h4>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input type="text" placeholder="Nombre" value={editFirstName} onChange={e => setEditFirstName(e.target.value)} required />
+              <input type="text" placeholder="Apellido" value={editLastName} onChange={e => setEditLastName(e.target.value)} required />
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input type="email" placeholder="Correo Electrónico" value={editEmail} onChange={e => setEditEmail(e.target.value)} required />
+              <input type="text" placeholder="Teléfono" value={editPhone} onChange={e => setEditPhone(e.target.value)} required />
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', flex: 1 }} required>
+                <option value="ACTIVE">Activo</option>
+                <option value="INACTIVE">Inactivo</option>
+              </select>
+              <button type="submit" style={{ background: '#e67e22', color: 'white', margin: 0, flex: 1.5 }}>Actualizar Cambios</button>
+              <button type="button" onClick={() => setEditingCustomer(null)} style={{ background: '#666', color: 'white', margin: 0, flex: 0.5 }}>Cerrar</button>
+            </div>
+          </form>
+        )}
+
         {/* Tabla Base de Clientes */}
         <table>
           <thead>
@@ -171,7 +237,7 @@ export default function CustomersTab() {
               <th>Nombre Completo</th>
               <th>Email</th>
               <th>Estado</th>
-              <th>Acción</th>
+              <th>Acciones Colectoras</th>
             </tr>
           </thead>
           <tbody>
@@ -180,7 +246,7 @@ export default function CustomersTab() {
             ) : (
               customers.map(c => (
                 <tr 
-                  key={c.id} 
+                  key={c.id}
                   style={{ 
                     background: selectedCustomer?.id === c.id ? '#f0f7ff' : 'transparent',
                     transition: 'background 0.2s' 
@@ -193,12 +259,18 @@ export default function CustomersTab() {
                       {c.status || 'ACTIVE'}
                     </span>
                   </td>
-                  <td>
+                  <td style={{ display: 'flex', gap: '0.4rem' }}>
                     <button 
                       onClick={() => handleSelectCustomer(c)}
-                      style={{ width: 'auto', padding: '4px 10px', fontSize: '0.85rem', margin: 0, background: '#0076ff' }}
+                      style={{ width: 'auto', padding: '4px 10px', fontSize: '0.85rem', margin: 0, background: selectedCustomer?.id === c.id ? '#e11d48' : '#0076ff' }}
                     >
-                      📍 Ubicaciones
+                      {selectedCustomer?.id === c.id ? '❌ Ocultar' : '📍 Ubicaciones'}
+                    </button>
+                    <button 
+                      onClick={() => startCustomerEdit(c)}
+                      style={{ width: 'auto', padding: '4px 10px', fontSize: '0.85rem', margin: 0, background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1' }}
+                    >
+                      ✏️ Editar
                     </button>
                   </td>
                 </tr>
@@ -211,13 +283,25 @@ export default function CustomersTab() {
       {/* SECCIÓN DERECHA: DIRECCIONES DEL CLIENTE SELECCIONADO */}
       {selectedCustomer && (
         <div style={{ flex: 1, background: '#f9f9fb', padding: '1.5rem', borderRadius: '8px', border: '1px solid #eee' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          
+          {/* Cabecera del panel con botón de cierre completo */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', borderBottom: '1px dashed #ddd', paddingBottom: '0.75rem' }}>
             <h4 style={{ margin: 0 }}>Direcciones de: <br/><span style={{ color: '#0076ff' }}>{selectedCustomer.firstName} {selectedCustomer.lastName}</span></h4>
             <button 
-              onClick={() => { setShowAddressForm(!showAddressForm); setFormSuccess(''); setFormError(''); }}
-              style={{ width: 'auto', padding: '0.5rem 1rem', background: showAddressForm ? '#666' : '#0076ff', margin: 0 }}
+              onClick={closeAddressPanel}
+              style={{ width: 'auto', padding: '2px 8px', background: '#475569', margin: 0, fontSize: '0.75rem', textTransform: 'uppercase' }}
             >
-              {showAddressForm ? '❌ Cerrar' : '➕ Añadir'}
+              ❌ Cerrar
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <span style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'bold' }}>Ubicaciones de Entrega</span>
+            <button 
+              onClick={() => { setShowAddressForm(!showAddressForm); setFormSuccess(''); setFormError(''); }}
+              style={{ width: 'auto', padding: '0.4rem 0.8rem', background: showAddressForm ? '#666' : '#0076ff', margin: 0, fontSize: '0.8rem' }}
+            >
+              {showAddressForm ? '🚫 Cancelar' : '➕ Añadir'}
             </button>
           </div>
 

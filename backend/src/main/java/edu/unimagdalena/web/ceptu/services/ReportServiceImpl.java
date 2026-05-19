@@ -24,7 +24,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<BestSellingProductResponse> getBestSellingProducts(Instant start, Instant end, int limit) {
-        // Compila perfectamente porque el repositorio ya retorna BestSellingProductResponse
+        // El repositorio ya retorna BestSellingProductResponse
         return productRepository.findBestSellingProducts(start, end, PageRequest.of(0, limit));
     }
 
@@ -40,7 +40,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<LowStockProductResponse> getLowStockProducts() {
-        // Compila perfectamente porque el repositorio ya retorna LowStockProductResponse
+        // el repositorio ya retorna LowStockProductResponse
         return productRepository.findProductsWithLowStock();
     }
 }

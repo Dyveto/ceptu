@@ -30,4 +30,10 @@ public class Inventory {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @PrePersist
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
 }

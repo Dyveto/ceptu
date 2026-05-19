@@ -1,9 +1,9 @@
 package edu.unimagdalena.web.ceptu.controllers;
 
-import edu.unimagdalena.web.ceptu.dto.BestSellingProductDTO;
-import edu.unimagdalena.web.ceptu.dto.MonthlyIncomeDTO;
-import edu.unimagdalena.web.ceptu.dto.TopCustomerDTO;
-import edu.unimagdalena.web.ceptu.dto.response.ProductResponse;
+import edu.unimagdalena.web.ceptu.dto.response.BestSellingProductResponse;
+import edu.unimagdalena.web.ceptu.dto.response.LowStockProductResponse;
+import edu.unimagdalena.web.ceptu.dto.response.MonthlyIncomeResponse;
+import edu.unimagdalena.web.ceptu.dto.response.TopCustomerResponse;
 import edu.unimagdalena.web.ceptu.services.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,14 +13,14 @@ import java.time.Instant;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/reports")
+@RequestMapping("/api/reports")
 @RequiredArgsConstructor
 public class ReportController {
 
     private final ReportService reportService;
 
     @GetMapping("/best-selling-products")
-    public ResponseEntity<List<BestSellingProductDTO>> getBestSellingProducts(
+    public ResponseEntity<List<BestSellingProductResponse>> getBestSellingProducts(
             @RequestParam Instant startDate,
             @RequestParam Instant endDate,
             @RequestParam(defaultValue = "10") int limit) {
@@ -28,17 +28,17 @@ public class ReportController {
     }
 
     @GetMapping("/monthly-income")
-    public ResponseEntity<List<MonthlyIncomeDTO>> getMonthlyIncome() {
+    public ResponseEntity<List<MonthlyIncomeResponse>> getMonthlyIncome() {
         return ResponseEntity.ok(reportService.getMonthlyIncome());
     }
 
     @GetMapping("/top-customers")
-    public ResponseEntity<List<TopCustomerDTO>> getTopCustomers(@RequestParam(defaultValue = "5") int limit) {
+    public ResponseEntity<List<TopCustomerResponse>> getTopCustomers(@RequestParam(defaultValue = "5") int limit) {
         return ResponseEntity.ok(reportService.getTopCustomers(limit));
     }
 
     @GetMapping("/low-stock-products")
-    public ResponseEntity<List<ProductResponse>> getLowStockProducts() {
+    public ResponseEntity<List<LowStockProductResponse>> getLowStockProducts() {
         return ResponseEntity.ok(reportService.getLowStockProducts());
     }
 }

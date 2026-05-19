@@ -1,6 +1,6 @@
 package edu.unimagdalena.web.ceptu.repositories;
 
-import edu.unimagdalena.web.ceptu.dto.TopCustomerDTO;
+import edu.unimagdalena.web.ceptu.dto.response.TopCustomerResponse;
 import edu.unimagdalena.web.ceptu.entities.Address;
 import edu.unimagdalena.web.ceptu.entities.Customer;
 import edu.unimagdalena.web.ceptu.entities.Order;
@@ -34,7 +34,6 @@ class OrderRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // 1. Creamos el cliente
         testCustomer = Customer.builder()
                 .firstName("Ana")
                 .lastName("García")
@@ -44,7 +43,6 @@ class OrderRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest {
                 .build();
         entityManager.persist(testCustomer);
 
-        // 2. Creamos la dirección (¡Lo que faltaba!)
         testAddress = Address.builder()
                 .customer(testCustomer)
                 .street("Carrera 15 # 22-10")
@@ -53,10 +51,9 @@ class OrderRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest {
                 .build();
         entityManager.persist(testAddress);
 
-        // 3. Creamos los pedidos y les asignamos la dirección
         Order order1 = Order.builder()
                 .customer(testCustomer)
-                .address(testAddress) // Asignamos la dirección
+                .address(testAddress)
                 .total(new BigDecimal("150000.00"))
                 .status(OrderStatus.PAID)
                 .createdAt(Instant.now().minus(2, ChronoUnit.DAYS))
@@ -64,7 +61,7 @@ class OrderRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest {
 
         Order order2 = Order.builder()
                 .customer(testCustomer)
-                .address(testAddress) // Asignamos la dirección
+                .address(testAddress)
                 .total(new BigDecimal("50000.00"))
                 .status(OrderStatus.DELIVERED)
                 .createdAt(Instant.now())
@@ -72,7 +69,9 @@ class OrderRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest {
 
         entityManager.persist(order1);
         entityManager.persist(order2);
+        
         entityManager.flush();
+        entityManager.clear();
     }
 
     @Test
@@ -80,13 +79,12 @@ class OrderRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest {
     void findByFilters_ShouldReturnMatchingOrders() {
         PageRequest page = PageRequest.of(0, 10);
 
-        // Filtramos por estado DELIVERED y un total máximo de 60000
         Page<Order> result = orderRepository.findByFilters(
                 null, OrderStatus.DELIVERED, null, null, null, new BigDecimal("60000.00"), page
         );
 
         assertEquals(1, result.getTotalElements());
-        assertEquals(new BigDecimal("50000.00"), result.getContent().get(0).getTotal());
+        assertEquals(0, new BigDecimal("50000.00").compareTo(result.getContent().get(0).getTotal()));
     }
 
     @Test
@@ -94,11 +92,11 @@ class OrderRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest {
     void findTopCustomersByBilling_ShouldReturnTopCustomers() {
         PageRequest limit = PageRequest.of(0, 5);
 
-        List<TopCustomerDTO> topCustomers = orderRepository.findTopCustomersByBilling(limit);
+        List<TopCustomerResponse> topCustomers = orderRepository.findTopCustomersByBilling(limit);
 
         assertFalse(topCustomers.isEmpty());
-        // El total gastado por Ana debería ser 150k + 50k = 200k
-        assertEquals(new BigDecimal("200000.00"), topCustomers.get(0).getTotalSpent());
-        assertEquals("Ana", topCustomers.get(0).getCustomer().getFirstName());
+        
+        assertEquals(0, new BigDecimal("200000.00").compareTo(topCustomers.get(0).totalSpent()));
+        assertEquals("Ana García", topCustomers.get(0).fullName());
     }
 }

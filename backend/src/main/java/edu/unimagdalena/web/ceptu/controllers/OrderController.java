@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/orders")
+@RequestMapping("/api/orders")
 @RequiredArgsConstructor
 public class OrderController {
 
@@ -50,7 +50,8 @@ public class OrderController {
     }
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable UUID id, @RequestBody CancelOrderRequest request) {
+    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable UUID id,
+            @Valid @RequestBody CancelOrderRequest request) {
         return ResponseEntity.ok(orderService.cancelOrder(id, request));
     }
 }

@@ -1,12 +1,12 @@
 package edu.unimagdalena.web.ceptu.repositories;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-import edu.unimagdalena.web.ceptu.dto.MonthlyIncomeDTO;
-import edu.unimagdalena.web.ceptu.dto.TopCustomerDTO;
+import edu.unimagdalena.web.ceptu.dto.response.MonthlyIncomeResponse;
+import edu.unimagdalena.web.ceptu.dto.response.TopCustomerResponse;
 import edu.unimagdalena.web.ceptu.entities.Order;
 import edu.unimagdalena.web.ceptu.entities.enums.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -17,19 +17,17 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-    // Buscar pedidos por cliente
     List<Order> findByCustomerId(UUID customerId);
 
-    // Busca pedidos por filtros combinados (usa solo los que el usuario envie)
+    // 🏆 HITO 5: Buscador Avanzado Blindado con COALESCE para Inferencia Atómica en Postgres
     @Query("""
             SELECT o FROM Order o
-            WHERE (:customerId IS NULL OR o.customer.id = :customerId)
-            AND (:status IS NULL OR o.status = :status)
-            AND (CAST(:startDate AS java.time.Instant) IS NULL OR o.createdAt >= :startDate)
-            AND (CAST(:endDate AS java.time.Instant) IS NULL OR o.createdAt <= :endDate)
-            AND (CAST(:minTotal AS java.math.BigDecimal) IS NULL OR o.total >= :minTotal)
-            AND (CAST(:maxTotal AS java.math.BigDecimal) IS NULL OR o.total <= :maxTotal)
-            ORDER BY o.createdAt DESC
+            WHERE o.customer.id = COALESCE(:customerId, o.customer.id)
+              AND o.status = COALESCE(:status, o.status)
+              AND o.createdAt >= COALESCE(:startDate, o.createdAt)
+              AND o.createdAt <= COALESCE(:endDate, o.createdAt)
+              AND o.total >= COALESCE(:minTotal, o.total)
+              AND o.total <= COALESCE(:maxTotal, o.total)
             """)
     Page<Order> findByFilters(
             @Param("customerId") UUID customerId,
@@ -38,27 +36,44 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             @Param("endDate") Instant endDate,
             @Param("minTotal") BigDecimal minTotal,
             @Param("maxTotal") BigDecimal maxTotal,
-            Pageable pageable);
+            Pageable pageable
+    );
 
-    // Ingresos mensuales agrupados
+    // 🏆 HITO 5: Clientes con mayor facturación (Top Customers)
     @Query("""
-            SELECT FUNCTION('YEAR', o.createdAt) AS year,
-                   FUNCTION('MONTH', o.createdAt) AS month,
-                   SUM(o.total) AS total
+            SELECT new edu.unimagdalena.web.ceptu.dto.response.TopCustomerResponse(
+                c.id,
+                CONCAT(c.firstName, ' ', c.lastName),
+                c.email,
+                SUM(o.total)
+            )
             FROM Order o
-            WHERE o.status NOT IN ('CANCELLED')
-            GROUP BY FUNCTION('YEAR', o.createdAt), FUNCTION('MONTH', o.createdAt)
-            ORDER BY FUNCTION('YEAR', o.createdAt), FUNCTION('MONTH', o.createdAt)
+            JOIN o.customer c
+            WHERE o.status IN (
+                edu.unimagdalena.web.ceptu.entities.enums.OrderStatus.PAID, 
+                edu.unimagdalena.web.ceptu.entities.enums.OrderStatus.SHIPPED, 
+                edu.unimagdalena.web.ceptu.entities.enums.OrderStatus.DELIVERED
+            )
+            GROUP BY c.id, c.firstName, c.lastName, c.email
+            ORDER BY SUM(o.total) DESC
             """)
-    List<MonthlyIncomeDTO> findMonthlyIncome();
+    List<TopCustomerResponse> findTopCustomersByBilling(Pageable pageable);
 
-    // Clientes con mayor facturacion
+    // 🏆 HITO 5: Ingresos mensuales desglosados (Solo órdenes pagas/exitosas)
     @Query("""
-            SELECT o.customer AS customer, SUM(o.total) AS totalSpent
+            SELECT new edu.unimagdalena.web.ceptu.dto.response.MonthlyIncomeResponse(
+                YEAR(o.createdAt),
+                MONTH(o.createdAt),
+                SUM(o.total)
+            )
             FROM Order o
-            WHERE o.status NOT IN ('CANCELLED')
-            GROUP BY o.customer
-            ORDER BY totalSpent DESC
+            WHERE o.status IN (
+                edu.unimagdalena.web.ceptu.entities.enums.OrderStatus.PAID, 
+                edu.unimagdalena.web.ceptu.entities.enums.OrderStatus.SHIPPED, 
+                edu.unimagdalena.web.ceptu.entities.enums.OrderStatus.DELIVERED
+            )
+            GROUP BY YEAR(o.createdAt), MONTH(o.createdAt)
+            ORDER BY YEAR(o.createdAt) DESC, MONTH(o.createdAt) DESC
             """)
-    List<TopCustomerDTO> findTopCustomersByBilling(Pageable pageable);
+    List<MonthlyIncomeResponse> findMonthlyIncome();
 }

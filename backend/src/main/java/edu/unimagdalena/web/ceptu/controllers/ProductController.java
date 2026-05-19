@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/products")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
 
@@ -42,7 +42,7 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable UUID id,
-                                                         @Valid @RequestBody UpdateProductRequest request) {
+            @Valid @RequestBody UpdateProductRequest request) {
         return ResponseEntity.ok(productService.updateProduct(id, request));
     }
 
@@ -52,13 +52,10 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    // Endpoint específico para administrar el stock (HU-03)
     @PutMapping("/{id}/inventory")
     public ResponseEntity<InventoryResponse> updateProductInventory(@PathVariable UUID id,
-                                                                    @Valid @RequestBody UpdateInventoryRequest request) {
-        // Obtenemos primero el inventario asociado al producto
+            @Valid @RequestBody UpdateInventoryRequest request) {
         InventoryResponse currentInventory = inventoryService.getInventoryByProductId(id);
-        // Actualizamos usando el ID del inventario
         InventoryResponse updated = inventoryService.updateInventory(currentInventory.id(), request);
         return ResponseEntity.ok(updated);
     }

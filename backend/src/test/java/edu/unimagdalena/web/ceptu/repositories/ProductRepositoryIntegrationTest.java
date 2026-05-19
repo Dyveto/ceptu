@@ -1,5 +1,6 @@
 package edu.unimagdalena.web.ceptu.repositories;
 
+import edu.unimagdalena.web.ceptu.dto.response.LowStockProductResponse;
 import edu.unimagdalena.web.ceptu.entities.Category;
 import edu.unimagdalena.web.ceptu.entities.Inventory;
 import edu.unimagdalena.web.ceptu.entities.Product;
@@ -29,7 +30,6 @@ class ProductRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest
 
     @BeforeEach
     void setUp() {
-        // Configura datos base antes de cada test
         testCategory = Category.builder().name("Ropa Universitaria").build();
         entityManager.persist(testCategory);
 
@@ -46,14 +46,16 @@ class ProductRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest
         Inventory inventory = Inventory.builder()
                 .product(testProduct)
                 .availableStock(5)
-                .minimumStock(10) // Configura un stock bajo a proposito
+                .minimumStock(10)
                 .updatedAt(Instant.now())
                 .build();
         entityManager.persist(inventory);
 
         testProduct.setInventory(inventory);
         entityManager.merge(testProduct);
-        entityManager.flush(); // Obliga a sincronizar con la BD real
+        
+        entityManager.flush();
+        entityManager.clear();
     }
 
     @Test
@@ -68,11 +70,14 @@ class ProductRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest
     @Test
     @DisplayName("Debe encontrar productos cuyo stock disponible sea menor al mínimo requerido")
     void findProductsWithLowStock_ShouldReturnLowStockProducts() {
-        List<Product> lowStockProducts = productRepository.findProductsWithLowStock();
+        List<LowStockProductResponse> lowStockProducts = productRepository.findProductsWithLowStock();
 
         assertFalse(lowStockProducts.isEmpty());
         assertEquals(1, lowStockProducts.size());
-        assertEquals("SUD-001", lowStockProducts.get(0).getSku());
+        
+        assertEquals("SUD-001", lowStockProducts.get(0).sku());
+        assertEquals("Sudadera Oficial", lowStockProducts.get(0).productName());
+        assertEquals(5, lowStockProducts.get(0).availableStock());
     }
 
     @Test

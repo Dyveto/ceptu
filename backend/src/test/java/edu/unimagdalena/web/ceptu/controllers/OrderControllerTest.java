@@ -6,10 +6,13 @@ import edu.unimagdalena.web.ceptu.dto.response.OrderResponse;
 import edu.unimagdalena.web.ceptu.entities.enums.OrderStatus;
 import edu.unimagdalena.web.ceptu.security.jwt.JwtService;
 import edu.unimagdalena.web.ceptu.services.OrderService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -48,25 +51,27 @@ class OrderControllerTest {
     private OrderService orderService;
 
     @Test
+    @DisplayName("Debería registrar un pedido y retornar 201 Created")
     void createOrder_WhenValidRequest_ShouldReturn201Created() throws Exception {
         CreateOrderItemRequest itemRequest = new CreateOrderItemRequest(UUID.randomUUID(), 2);
         CreateOrderRequest request = new CreateOrderRequest(UUID.randomUUID(), UUID.randomUUID(), List.of(itemRequest));
 
         OrderResponse expectedResponse = new OrderResponse(
-                UUID.randomUUID(),              // UUID id
-                UUID.randomUUID(),              // UUID customerId
-                "Ana García",                   // String customerFullName
-                UUID.randomUUID(),              // UUID addressId
-                OrderStatus.CREATED,            // OrderStatus status
-                new BigDecimal("150.00"),   // BigDecimal total
-                List.of(),                      // List<OrderItemResponse> items
-                Instant.now(),                  // Instant createdAt
-                Instant.now()                   // Instant updatedAt
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "Ana García",
+                UUID.randomUUID(),
+                OrderStatus.CREATED,
+                new BigDecimal("150.00"),
+                List.of(),
+                Instant.now(),
+                Instant.now()
         );
 
         when(orderService.createOrder(any(CreateOrderRequest.class))).thenReturn(expectedResponse);
 
-        mockMvc.perform(post("/api/v1/orders")
+        // 🏆 CORREGIDO: Ruta sin /v1
+        mockMvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -74,35 +79,38 @@ class OrderControllerTest {
     }
 
     @Test
+    @DisplayName("Debería disparar un rollback y retornar 500 si ocurre una excepción de stock insuficiente en el pago")
     void payOrder_WhenInsufficientStock_ShouldReturn400Or500() throws Exception {
         UUID orderId = UUID.randomUUID();
 
         when(orderService.payOrder(orderId)).thenThrow(new RuntimeException("Stock insuficiente para procesar el pago"));
 
-        mockMvc.perform(put("/api/v1/orders/{id}/pay", orderId))
+        // 🏆 CORREGIDO: Ruta sin /v1
+        mockMvc.perform(put("/api/orders/{id}/pay", orderId))
                 .andExpect(status().isInternalServerError());
     }
 
     @Test
+    @DisplayName("Debería despachar el pedido correctamente y cambiar a estado SHIPPED")
     void shipOrder_WhenValidState_ShouldReturn200Ok() throws Exception {
         UUID orderId = UUID.randomUUID();
 
-        // Mismo orden exacto que arriba
         OrderResponse expectedResponse = new OrderResponse(
-                orderId,                        // UUID id
-                UUID.randomUUID(),              // UUID customerId
-                "Ana García",                   // String customerFullName
-                UUID.randomUUID(),              // UUID addressId
-                OrderStatus.SHIPPED,            // OrderStatus status
-                new BigDecimal("150.00"),   // BigDecimal total
-                List.of(),                      // List<OrderItemResponse> items
-                Instant.now(),                  // Instant createdAt
-                Instant.now()                   // Instant updatedAt
+                orderId,
+                UUID.randomUUID(),
+                "Ana García",
+                UUID.randomUUID(),
+                OrderStatus.SHIPPED,
+                new BigDecimal("150.00"),
+                List.of(),
+                Instant.now(),
+                Instant.now()
         );
 
         when(orderService.shipOrder(orderId)).thenReturn(expectedResponse);
 
-        mockMvc.perform(put("/api/v1/orders/{id}/ship", orderId))
+        // 🏆 CORREGIDO: Ruta sin /v1
+        mockMvc.perform(put("/api/orders/{id}/ship", orderId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SHIPPED"));
     }

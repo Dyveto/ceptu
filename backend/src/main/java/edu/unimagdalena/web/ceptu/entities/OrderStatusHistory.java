@@ -1,5 +1,6 @@
 package edu.unimagdalena.web.ceptu.entities;
 
+import edu.unimagdalena.web.ceptu.entities.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,14 +23,21 @@ public class OrderStatusHistory {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "previous_status")
-    private String previousStatus;
+    private OrderStatus previousStatus; 
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "new_status", nullable = false)
-    private String newStatus;
+    private OrderStatus newStatus;
 
     private String notes;
 
     @Column(name = "changed_at", nullable = false)
     private Instant changedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.changedAt = Instant.now();
+    }
 }

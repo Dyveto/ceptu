@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -55,8 +54,6 @@ public class OrderServiceImpl implements OrderService {
                 .customer(customer)
                 .address(address)
                 .status(OrderStatus.CREATED)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
                 .total(BigDecimal.ZERO)
                 .orderItems(new ArrayList<>())
                 .orderStatusHistories(new ArrayList<>())
@@ -71,6 +68,17 @@ public class OrderServiceImpl implements OrderService {
             if (!product.isActive()) {
                 throw new BusinessException("El producto " + product.getName() + " está inactivo.");
             }
+
+            // 🚨 REGLA DE NEGOCIO ATÓMICA: Validación y descuento inmediato de Stock
+            Inventory inventory = inventoryRepository.findByProductId(product.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Inventario no encontrado para el producto: " + product.getName()));
+
+            if (inventory.getAvailableStock() < itemReq.quantity()) {
+                throw new RuntimeException("Stock insuficiente para el producto: " + product.getName());
+            }
+
+            inventory.setAvailableStock(inventory.getAvailableStock() - itemReq.quantity());
+            inventoryRepository.save(inventory);
 
             BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(itemReq.quantity()));
             grandTotal = grandTotal.add(subtotal);
@@ -91,9 +99,8 @@ public class OrderServiceImpl implements OrderService {
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
                 .previousStatus(null)
-                .newStatus(OrderStatus.CREATED.name())
+                .newStatus(OrderStatus.CREATED)
                 .notes("Orden creada exitosamente")
-                .changedAt(Instant.now())
                 .build();
         order.getOrderStatusHistories().add(history);
 
@@ -132,33 +139,30 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada con ID: " + id));
 
-        if (order.getStatus() == OrderStatus.DELIVERED) {
-            throw new BusinessException("No se puede cancelar una orden ya entregada");
+        if (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED) {
+            throw new BusinessException("No se puede cancelar un pedido que ya está en estado: " + order.getStatus());
         }
 
         if (order.getStatus() == OrderStatus.CANCELLED) {
             throw new ConflictException("La orden ya se encuentra cancelada");
         }
 
-        if (order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.SHIPPED) {
-            for (OrderItem item : order.getOrderItems()) {
-                Inventory inventory = item.getProduct().getInventory();
-                inventory.setAvailableStock(inventory.getAvailableStock() + item.getQuantity());
-                inventory.setUpdatedAt(Instant.now());
-                inventoryRepository.save(inventory);
-            }
+        // Al cancelar, devolvemos el stock reservado al inventario general de la app
+        for (OrderItem item : order.getOrderItems()) {
+            Inventory inventory = inventoryRepository.findByProductId(item.getProduct().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Inventario no encontrado"));
+            inventory.setAvailableStock(inventory.getAvailableStock() + item.getQuantity());
+            inventoryRepository.save(inventory);
         }
 
-        String previousStatus = order.getStatus().name();
+        OrderStatus previousStatus = order.getStatus();
         order.setStatus(OrderStatus.CANCELLED);
-        order.setUpdatedAt(Instant.now());
 
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
                 .previousStatus(previousStatus)
-                .newStatus(OrderStatus.CANCELLED.name())
+                .newStatus(OrderStatus.CANCELLED)
                 .notes(request.notes() != null ? request.notes() : "Cancelación de pedido")
-                .changedAt(Instant.now())
                 .build();
         order.getOrderStatusHistories().add(history);
 
@@ -176,30 +180,14 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException("Solo los pedidos en estado CREATED pueden ser pagados. Estado actual: " + order.getStatus());
         }
 
-        for (OrderItem item : order.getOrderItems()) {
-            Inventory inventory = item.getProduct().getInventory();
-            if (inventory.getAvailableStock() < item.getQuantity()) {
-                throw new BusinessException("Stock insuficiente para procesar el pago del producto: " + item.getProduct().getName());
-            }
-        }
-
-        for (OrderItem item : order.getOrderItems()) {
-            Inventory inventory = item.getProduct().getInventory();
-            inventory.setAvailableStock(inventory.getAvailableStock() - item.getQuantity());
-            inventory.setUpdatedAt(Instant.now());
-            inventoryRepository.save(inventory);
-        }
-
-        String previousStatus = order.getStatus().name();
+        OrderStatus previousStatus = order.getStatus();
         order.setStatus(OrderStatus.PAID);
-        order.setUpdatedAt(Instant.now());
 
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
                 .previousStatus(previousStatus)
-                .newStatus(OrderStatus.PAID.name())
-                .notes("Pago confirmado y stock descontado")
-                .changedAt(Instant.now())
+                .newStatus(OrderStatus.PAID)
+                .notes("Pago confirmado con éxito")
                 .build();
         order.getOrderStatusHistories().add(history);
 
@@ -217,16 +205,14 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException("Solo los pedidos pagados (PAID) pueden ser enviados. Estado actual: " + order.getStatus());
         }
 
-        String previousStatus = order.getStatus().name();
+        OrderStatus previousStatus = order.getStatus();
         order.setStatus(OrderStatus.SHIPPED);
-        order.setUpdatedAt(Instant.now());
 
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
                 .previousStatus(previousStatus)
-                .newStatus(OrderStatus.SHIPPED.name())
+                .newStatus(OrderStatus.SHIPPED)
                 .notes("Pedido despachado para entrega")
-                .changedAt(Instant.now())
                 .build();
         order.getOrderStatusHistories().add(history);
 
@@ -244,16 +230,14 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException("Solo los pedidos enviados (SHIPPED) pueden marcarse como entregados. Estado actual: " + order.getStatus());
         }
 
-        String previousStatus = order.getStatus().name();
+        OrderStatus previousStatus = order.getStatus();
         order.setStatus(OrderStatus.DELIVERED);
-        order.setUpdatedAt(Instant.now());
 
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
                 .previousStatus(previousStatus)
-                .newStatus(OrderStatus.DELIVERED.name())
+                .newStatus(OrderStatus.DELIVERED)
                 .notes("Pedido entregado exitosamente al cliente")
-                .changedAt(Instant.now())
                 .build();
         order.getOrderStatusHistories().add(history);
 

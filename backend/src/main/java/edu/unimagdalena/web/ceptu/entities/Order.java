@@ -41,10 +41,15 @@ public class Order {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
-    //                                                        limpia registros huérfanos
+    // limpia registros huérfanos
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderStatusHistory> orderStatusHistories;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now(); // O 'orderDate', dependiendo de cómo llamaste al atributo
+    }
 }

@@ -5,10 +5,13 @@ import edu.unimagdalena.web.ceptu.dto.response.CustomerResponse;
 import edu.unimagdalena.web.ceptu.entities.enums.CustomerStatus;
 import edu.unimagdalena.web.ceptu.security.jwt.JwtService;
 import edu.unimagdalena.web.ceptu.services.CustomerService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -44,6 +47,7 @@ class CustomerControllerTest {
     private CustomerService customerService;
 
     @Test
+    @DisplayName("Debería crear un cliente exitosamente y retornar 201 Created")
     void createCustomer_WhenValidRequest_ShouldReturn201Created() throws Exception {
         CreateCustomerRequest request = new CreateCustomerRequest("Laura", "Pérez", "laura@test.com", "3001234567");
         CustomerResponse expectedResponse = new CustomerResponse(
@@ -52,7 +56,8 @@ class CustomerControllerTest {
 
         when(customerService.createCustomer(any(CreateCustomerRequest.class))).thenReturn(expectedResponse);
 
-        mockMvc.perform(post("/api/v1/customers")
+        // 🏆 CORREGIDO: Ruta alineada al Hito 1 (/api/customers)
+        mockMvc.perform(post("/api/customers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -61,13 +66,14 @@ class CustomerControllerTest {
     }
 
     @Test
+    @DisplayName("Debería rechazar la creación por formato de email inválido y retornar 400 Bad Request")
     void createCustomer_WhenInvalidEmail_ShouldReturn400BadRequest() throws Exception {
         CreateCustomerRequest invalidRequest = new CreateCustomerRequest("Laura", "Pérez", "correo-invalido", "3001234567");
 
-        mockMvc.perform(post("/api/v1/customers")
+        // 🏆 CORREGIDO: Ruta alineada al Hito 1
+        mockMvc.perform(post("/api/customers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
     }
 }
-

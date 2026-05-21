@@ -59,7 +59,6 @@ function Register({ onRegisterSuccess, onSwitchToLogin }) {
           style={{ display: 'block', width: '100%', margin: '0.75rem 0', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
         >
           <option value="ROLE_ADMIN">Administrador (ADMIN)</option>
-          <option value="ROLE_USER">Usuario Regular (USER)</option>
         </select>
 
         {error && <p style={{ color: 'red', fontSize: '0.9rem', margin: '0.5rem 0' }}>{error}</p>}

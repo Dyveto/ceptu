@@ -50,4 +50,4 @@ Por defecto, el frontend espera que el servidor API de Ceptu esté corriendo en:
 
 ## Notas de Versión
 
-Este proyecto utiliza **Vite 8.0.10** para garantizar la estabilidad del entorno de desarrollo y evitar regresiones conocidas en versiones menores posteriores (.11/.12). No actualizar la dependencia de Vite sin previa validación técnica.
+Este proyecto utiliza **Vite 8.0.10** para garantizar la estabilidad del entorno de desarrollo.

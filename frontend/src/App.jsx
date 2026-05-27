@@ -1,48 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import Login from './components/Login.jsx';
-import Register from './components/Register.jsx';
-import Dashboard from './components/Dashboard.jsx';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
+
+const PrivateRoute = ({ children }) => {
+  const { user } = useAuth();
+  return user ? children : <Navigate to="/login" replace />;
+};
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [view, setView] = useState('login');
-
-  useEffect(() => {
-    const token = localStorage.getItem('ceptu_token');
-    if (token) {
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  const handleLoginSuccess = (token) => {
-    localStorage.setItem('ceptu_token', token);
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('ceptu_token');
-    setIsAuthenticated(false);
-    setView('login');
-  };
-
-  if (isAuthenticated) {
-    return <Dashboard onLogout={handleLogout} />;
-  }
-
   return (
-    <>
-      {view === 'login' ? (
-        <Login 
-          onLoginSuccess={handleLoginSuccess} 
-          onSwitchToRegister={() => setView('register')} 
-        />
-      ) : (
-        <Register 
-          onRegisterSuccess={() => setView('login')} 
-          onSwitchToLogin={() => setView('login')} 
-        />
-      )}
-    </>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <PrivateRoute>
+                <DashboardPage />
+              </PrivateRoute>
+            } 
+          />
+          {/* Redirección por defecto si la URL no existe */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

@@ -141,7 +141,7 @@ export default function CustomersTab() {
               </div>
           )}
 
-          {/* ... FORMULARIOS (Se mantienen exactamente igual a tu versión) ... */}
+          {/* ... FORMULARIOS ... */}
           {showCustomerForm && (
               <form onSubmit={handleCreateCustomer} style={{ background: '#f8f9fa', padding: '1.2rem', borderRadius: '6px', border: '1px solid #e9ecef', marginBottom: '1.5rem' }}>
                 <h4 style={{ margin: '0 0 1rem 0' }}>Registrar Nuevo Cliente</h4>
@@ -188,7 +188,7 @@ export default function CustomersTab() {
             {filteredCustomers.length === 0 ? (
                 <tr><td colSpan="4">No se encontraron clientes.</td></tr>
             ) : (
-                // Mapeamos el arreglo filtrado
+                // Se mapea el arreglo filtrado
                 filteredCustomers.map(c => (
                     <tr key={c.id} style={{ background: selectedCustomer?.id === c.id ? '#f0f7ff' : 'transparent', transition: 'background 0.2s' }}>
                       <td><strong>{c.firstName} {c.lastName}</strong></td>
@@ -213,7 +213,7 @@ export default function CustomersTab() {
           </table>
         </div>
 
-        {/* ... PANEL LATERAL DE DIRECCIONES (Se mantiene intacto) ... */}
+        {/* ... PANEL LATERAL DE DIRECCIONES ... */}
         {selectedCustomer && (
             <div style={{ flex: 1, background: '#f9f9fb', padding: '1.5rem', borderRadius: '8px', border: '1px solid #eee' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', borderBottom: '1px dashed #ddd', paddingBottom: '0.75rem' }}>

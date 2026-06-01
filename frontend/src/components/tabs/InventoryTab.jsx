@@ -164,7 +164,7 @@ export default function InventoryTab() {
           />
         </div>
 
-        {/* ... FORMULARIOS (Se mantienen igual) ... */}
+        {/* ... FORMULARIOS ... */}
         {(showCatForm || showProdForm || editingProduct || editingProductDetails) && (
             <div style={{ background: '#f9f9fb', padding: '1.5rem', borderRadius: '8px', border: '1px solid #eee', marginBottom: '2rem' }}>
               {showCatForm && (
@@ -245,7 +245,7 @@ export default function InventoryTab() {
           {filteredProducts.length === 0 ? (
               <tr><td colSpan="6">No se encontraron productos.</td></tr>
           ) : (
-              // Mapeamos el arreglo filtrado
+              // Se mapea el arreglo filtrado
               filteredProducts.map(p => {
                 const currentStock = p.inventory ? p.inventory.availableStock : (p.availableStock ?? p.initialStock ?? 0);
                 const minStock = p.inventory ? p.inventory.minimumStock : (p.minimumStock || 0);

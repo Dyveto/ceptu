@@ -197,7 +197,7 @@ export default function OrdersTab() {
           />
         </div>
 
-        {/* ... FORMULARIO (Se mantiene igual a tu código original) ... */}
+        {/* ... FORMULARIO ... */}
         {showCreateForm && (
             <form onSubmit={handleCreateOrder} style={{ background: '#f9f9fb', padding: '1.5rem', borderRadius: '8px', border: '1px solid #eee', marginBottom: '2rem' }}>
               <h4>Formulario de Pedido Comercial</h4>
@@ -243,7 +243,7 @@ export default function OrdersTab() {
             </form>
         )}
 
-        {/* ... MODAL CANCELACIÓN (Se mantiene igual) ... */}
+        {/* ... MODAL CANCELACIÓN ... */}
         {cancelingOrderId && (
             <div style={{ background: '#fff0f0', padding: '1.2rem', borderRadius: '6px', border: '1px solid #ffccd2', marginBottom: '1.5rem' }}>
               <form onSubmit={handleCancelOrderSubmit}>
@@ -273,7 +273,7 @@ export default function OrdersTab() {
           {filteredOrders.length === 0 ? (
               <tr><td colSpan="6">No se encontraron pedidos.</td></tr>
           ) : (
-              // Usamos el arreglo filtrado
+              // Se usa el arreglo filtrado
               filteredOrders.map(o => (
                   <tr key={o.id}>
                     <td>

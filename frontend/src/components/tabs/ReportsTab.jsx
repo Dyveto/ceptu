@@ -98,7 +98,7 @@ export default function ReportsTab() {
         </button>
       </div>
 
-      {/* TARJETAS DE MÉTRICAS PRINCIPALES (SCORECARDS) */}
+      {/* TARJETAS DE MÉTRICAS PRINCIPALES */}
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
         <div style={{ flex: 1, background: '#e3f2fd', borderLeft: '5px solid #2196f3', padding: '1.2rem', borderRadius: '6px' }}>
           <small style={{ color: '#0d47a1', fontWeight: 'bold', textTransform: 'uppercase' }}>💰 Ingresos Consolidados</small>
